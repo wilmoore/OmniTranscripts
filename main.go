@@ -7,10 +7,10 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 
-	"videotranscript-app/config"
-	"videotranscript-app/handlers"
-	"videotranscript-app/jobs"
-	"videotranscript-app/lib"
+	"omnitranscripts/config"
+	"omnitranscripts/handlers"
+	"omnitranscripts/jobs"
+	"omnitranscripts/lib"
 )
 
 func main() {
@@ -32,7 +32,7 @@ func main() {
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"status":  "ok",
-			"message": "VideoTranscript.app API is running",
+			"message": "OmniTranscripts API is running",
 		})
 	})
 

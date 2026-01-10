@@ -1,0 +1,18 @@
+{
+  "lastSequence": 1,
+  "items": [
+    {
+      "id": 1,
+      "title": "Rename VideoTranscript to OmniTranscripts",
+      "description": "Rename project from VideoTranscript to OmniTranscripts and formally expand scope from library-only to combined library + HTTP API. Includes: updating Go module name to 'omnitranscripts', creating engine/ package for public library consumption, adding minimal TranscriptionError with stage-specific errors, documenting GitHub repo rename steps, updating all documentation and references.",
+      "category": "feature",
+      "severity": "medium",
+      "fingerprint": "feature|1|rename-videotranscript-to-omnitranscripts",
+      "source": "/pro:feature",
+      "sourceBranch": "feature/rename-omnitranscripts",
+      "createdAt": "2026-01-09T00:00:00Z",
+      "status": "completed",
+      "completedAt": "2026-01-10T00:00:00Z"
+    }
+  ]
+}

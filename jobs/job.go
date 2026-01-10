@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"omnitranscripts/models"
 )
 
 type JobStatus string
@@ -16,20 +18,14 @@ const (
 )
 
 type Job struct {
-	ID          string     `json:"id"`
-	URL         string     `json:"url"`
-	Status      JobStatus  `json:"status"`
-	Transcript  string     `json:"transcript,omitempty"`
-	Segments    []Segment  `json:"segments,omitempty"`
-	Error       string     `json:"error,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
-	CompletedAt *time.Time `json:"completed_at,omitempty"`
-}
-
-type Segment struct {
-	Start float64 `json:"start"`
-	End   float64 `json:"end"`
-	Text  string  `json:"text"`
+	ID          string           `json:"id"`
+	URL         string           `json:"url"`
+	Status      JobStatus        `json:"status"`
+	Transcript  string           `json:"transcript,omitempty"`
+	Segments    []models.Segment `json:"segments,omitempty"`
+	Error       string           `json:"error,omitempty"`
+	CreatedAt   time.Time        `json:"created_at"`
+	CompletedAt *time.Time       `json:"completed_at,omitempty"`
 }
 
 func NewJob(url string) *Job {
@@ -45,7 +41,7 @@ func (j *Job) MarkRunning() {
 	j.Status = StatusRunning
 }
 
-func (j *Job) MarkComplete(transcript string, segments []Segment) {
+func (j *Job) MarkComplete(transcript string, segments []models.Segment) {
 	j.Status = StatusComplete
 	j.Transcript = transcript
 	j.Segments = segments

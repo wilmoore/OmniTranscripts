@@ -1,73 +1,75 @@
-# VideoTranscript.app
+# OmniTranscripts
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat&logo=go&logoColor=white)](https://golang.org/doc/go1.23)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/wilmoore/VideoTranscript.app?style=flat&logo=github)](https://github.com/wilmoore/VideoTranscript.app/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/wilmoore/VideoTranscript.app)](https://github.com/wilmoore/VideoTranscript.app/issues)
+[![GitHub stars](https://img.shields.io/github/stars/wilmoore/omnitranscripts?style=flat&logo=github)](https://github.com/wilmoore/omnitranscripts/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/wilmoore/omnitranscripts)](https://github.com/wilmoore/omnitranscripts/issues)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker&logoColor=white)](Dockerfile)
 [![Encore.dev](https://img.shields.io/badge/Encore.dev-Ready-6366F1?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMjIgOFYxNkwxMiAyMkwyIDI2VjhMMTIgMloiIGZpbGw9IiM2MzY2RjEiLz4KPC9zdmc+)](https://encore.dev)
 
-> A fast, production-ready API for transcribing YouTube videos using Go with native libraries and OpenAI Whisper, featuring comprehensive async job processing.
+> Universal media transcription engine for audio and video from any URL. Powered by Go, yt-dlp, FFmpeg, and whisper.cpp.
 
 ![logo](./docs/logo.png)
 
 ## Features
 
-- **YouTube Video Transcription**: Convert YouTube videos to text with timestamps
+- **Universal Media Transcription**: Transcribe audio and video from 1000+ platforms via yt-dlp
+- **Audio-First**: Audio-only workflows are first-class citizens (podcasts, voice memos, audio files)
+- **Dual Consumption**: Use as a Go library or HTTP API from the same codebase
 - **Fast Processing**: Optimized pipeline with native Go libraries and FFmpeg
-- **Async & Sync**: Short videos (<2min) return transcripts immediately, longer videos use job queue
-- **Production Ready**: Database support, metrics, monitoring, and webhooks
+- **Async & Sync**: Short media (<2min) returns transcripts immediately, longer media uses job queue
 - **Multiple Output Formats**: SRT, VTT, JSON, TSV, and plain text
-- **Real-time Dashboard**: Live job monitoring and system metrics
+- **Structured Errors**: Stage-specific error reporting (download, normalize, transcribe)
+- **Production Ready**: Database support, metrics, monitoring, and webhooks
 - **Docker & Cloud Ready**: Easy deployment with comprehensive guides
 
-## 📚 Documentation
+## Documentation
 
 <div align="center">
 
 <table>
   <tr>
     <td>
-      <h3>🚀 Quick Start</h3>
+      <h3>Quick Start</h3>
       <p>Get up and running in minutes.</p>
-      <a href="#quick-start"><strong>Read guide →</strong></a>
+      <a href="#quick-start"><strong>Read guide</strong></a>
     </td>
     <td>
-      <h3>📖 API Docs</h3>
+      <h3>API Docs</h3>
       <p>Complete reference with request & response examples.</p>
-      <a href="docs/api.md"><strong>Explore →</strong></a>
+      <a href="docs/api.md"><strong>Explore</strong></a>
     </td>
     <td>
-      <h3>🏗️ Architecture</h3>
+      <h3>Architecture</h3>
       <p>Deep dive into the system design and patterns.</p>
-      <a href="docs/architecture.md"><strong>Understand →</strong></a>
+      <a href="docs/architecture.md"><strong>Understand</strong></a>
     </td>
     <td>
-      <h3>🚀 Deployment</h3>
+      <h3>Deployment</h3>
       <p>Production-ready deployment playbooks.</p>
-      <a href="docs/deployment.md"><strong>Deploy →</strong></a>
+      <a href="docs/deployment.md"><strong>Deploy</strong></a>
     </td>
   </tr>
   <tr>
     <td>
-      <h3>💻 Development</h3>
+      <h3>Development</h3>
       <p>Local setup, workflows, and contributor tooling.</p>
-      <a href="docs/development.md"><strong>Build →</strong></a>
+      <a href="docs/development.md"><strong>Build</strong></a>
     </td>
     <td>
-      <h3>🔧 Troubleshooting</h3>
+      <h3>Troubleshooting</h3>
       <p>Quick fixes for common pitfalls and errors.</p>
-      <a href="docs/troubleshooting.md"><strong>Fix →</strong></a>
+      <a href="docs/troubleshooting.md"><strong>Fix</strong></a>
     </td>
     <td>
-      <h3>🤝 Contributing</h3>
+      <h3>Contributing</h3>
       <p>Guidelines for issues, pull requests, and reviews.</p>
-      <a href="docs/contributing.md"><strong>Join →</strong></a>
+      <a href="docs/contributing.md"><strong>Join</strong></a>
     </td>
     <td>
-      <h3>📋 Changelog</h3>
+      <h3>Changelog</h3>
       <p>Track version history and notable updates.</p>
-      <a href="docs/changelog.md"><strong>Review →</strong></a>
+      <a href="docs/changelog.md"><strong>Review</strong></a>
     </td>
   </tr>
 </table>
@@ -76,17 +78,17 @@
 
 ## Quick Start
 
-### 🐳 Docker (Recommended)
+### Docker (Recommended)
 ```bash
-# Run with Docker (coming soon)
+# Run with Docker
 docker run -d \
-  --name videotranscript \
+  --name omnitranscripts \
   -p 3000:3000 \
   -e API_KEY=your-api-key-here \
-  wilmoore/videotranscript:latest
+  wilmoore/omnitranscripts:latest
 ```
 
-### 🚀 Local Development
+### Local Development
 ```bash
 # 1. Install dependencies
 # macOS
@@ -98,24 +100,51 @@ sudo apt install golang-go ffmpeg python3-pip
 pip install openai-whisper
 
 # 2. Clone and run
-git clone https://github.com/wilmoore/VideoTranscript.app.git
-cd VideoTranscript.app
+git clone https://github.com/wilmoore/omnitranscripts.git
+cd omnitranscripts
 cp .env.example .env  # Edit with your settings
 make dev
 ```
 
-### ⚡ Encore.dev (Production)
+### Encore.dev (Production)
 ```bash
 # Deploy to production in one command
 curl -L https://encore.dev/install.sh | bash
 encore deploy --env production
 ```
 
-## API Endpoints
+## Usage
 
-### `POST /transcribe`
+### As a Go Library
 
-Transcribe a YouTube video.
+```go
+import "omnitranscripts/engine"
+
+// Transcribe any URL (YouTube, Vimeo, SoundCloud, direct audio URLs, etc.)
+result, err := engine.Transcribe(
+    "https://example.com/audio.mp3",
+    "job-123",
+    engine.DefaultOptions(),
+)
+if err != nil {
+    var tErr *engine.TranscriptionError
+    if errors.As(err, &tErr) {
+        fmt.Printf("Failed at stage %s: %s\n", tErr.Stage, tErr.Message)
+    }
+    return err
+}
+
+fmt.Println(result.Transcript)
+for _, seg := range result.Segments {
+    fmt.Printf("[%0.1fs - %0.1fs] %s\n", seg.Start, seg.End, seg.Text)
+}
+```
+
+### As an HTTP API
+
+#### `POST /transcribe`
+
+Transcribe media from any supported URL.
 
 **Request:**
 ```json
@@ -124,7 +153,7 @@ Transcribe a YouTube video.
 }
 ```
 
-**Response (Short Videos):**
+**Response (Short Media):**
 ```json
 {
   "transcript": "Never gonna give you up, never gonna let you down...",
@@ -138,14 +167,14 @@ Transcribe a YouTube video.
 }
 ```
 
-**Response (Long Videos):**
+**Response (Long Media):**
 ```json
 {
   "job_id": "123e4567-e89b-12d3-a456-426614174000"
 }
 ```
 
-### `GET /transcribe/{job_id}`
+#### `GET /transcribe/{job_id}`
 
 Get the status and result of a transcription job.
 
@@ -163,11 +192,11 @@ Get the status and result of a transcription job.
 
 Possible statuses: `pending`, `running`, `complete`, `error`
 
-### `GET /health`
+#### `GET /health`
 
 Health check endpoint (no authentication required).
 
-**📖 Complete API documentation:** [docs/api.md](docs/api.md)
+**Complete API documentation:** [docs/api.md](docs/api.md)
 
 ## Usage Examples
 
@@ -179,6 +208,12 @@ curl -X POST http://localhost:3000/transcribe \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'
+
+# Transcribe a podcast
+curl -X POST http://localhost:3000/transcribe \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/podcast-episode.mp3"}'
 
 # Check job status
 curl -X GET http://localhost:3000/transcribe/YOUR_JOB_ID \
@@ -202,7 +237,7 @@ const response = await fetch('http://localhost:3000/transcribe', {
 const result = await response.json();
 ```
 
-**💻 More usage examples and SDKs:** [docs/api.md](docs/api.md)
+**More usage examples and SDKs:** [docs/api.md](docs/api.md)
 
 ## Development Setup
 
@@ -214,13 +249,13 @@ const result = await response.json();
 ### Quick Setup
 ```bash
 # Clone and setup
-git clone https://github.com/wilmoore/VideoTranscript.app.git
-cd VideoTranscript.app
+git clone https://github.com/wilmoore/omnitranscripts.git
+cd omnitranscripts
 cp .env.example .env  # Edit with your settings
 make dev
 ```
 
-**💻 Detailed development guide:** [docs/development.md](docs/development.md)
+**Detailed development guide:** [docs/development.md](docs/development.md)
 
 ## Make Commands
 
@@ -232,41 +267,45 @@ make build         # Build for current platform
 make check         # Run quality checks (fmt + lint + vet + test)
 ```
 
-**🛠️ Complete command reference:** [docs/development.md#using-the-makefile](docs/development.md#using-the-makefile)
+**Complete command reference:** [docs/development.md#using-the-makefile](docs/development.md#using-the-makefile)
 
 ## Production Deployment
 
-### 🐳 Docker (Recommended)
+### Docker (Recommended)
 ```bash
-docker build -t videotranscript-app .
-docker run -p 3000:3000 --env-file .env videotranscript-app
+docker build -t omnitranscripts .
+docker run -p 3000:3000 --env-file .env omnitranscripts
 ```
 
-### ⚡ Encore.dev (Zero-Config)
+### Encore.dev (Zero-Config)
 ```bash
 encore deploy --env production
 ```
 
-### ☁️ Cloud Platforms
+### Cloud Platforms
 - **AWS ECS/Fargate** - Container-based deployment
 - **Google Cloud Run** - Serverless containers
 - **Azure Container Instances** - Managed containers
 - **Kubernetes** - Full orchestration
 
-**🚀 Complete deployment guides:** [docs/deployment.md](docs/deployment.md)
+**Complete deployment guides:** [docs/deployment.md](docs/deployment.md)
 
 ## Architecture
 
 **Three-Stage Pipeline:**
-1. **Download** - Extract audio from YouTube URLs (native Go library)
+1. **Download** - Extract audio from any URL (yt-dlp, supports 1000+ platforms)
 2. **Normalize** - Convert to 16kHz mono WAV (FFmpeg)
-3. **Transcribe** - Generate timestamped transcripts (OpenAI Whisper)
+3. **Transcribe** - Generate timestamped transcripts (whisper.cpp)
 
 **Smart Processing:**
-- Videos ≤2min: Synchronous (immediate results)
-- Videos >2min: Asynchronous (job queue with status tracking)
+- Media <=2min: Synchronous (immediate results)
+- Media >2min: Asynchronous (job queue with status tracking)
 
-**🏗️ Detailed architecture:** [docs/architecture.md](docs/architecture.md)
+**Dual Consumption Model:**
+- `engine/` package: Direct Go library usage
+- HTTP API: Thin adapter over the engine
+
+**Detailed architecture:** [docs/architecture.md](docs/architecture.md)
 
 ## API Documentation
 
@@ -292,10 +331,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
 
-**⭐ Star this repo if it's helpful!**
+**Star this repo if it's helpful!**
 
-[🐛 Report Bug](https://github.com/wilmoore/VideoTranscript.app/issues) • [✨ Request Feature](https://github.com/wilmoore/VideoTranscript.app/issues) • [💬 Discussions](https://github.com/wilmoore/VideoTranscript.app/discussions)
+[Report Bug](https://github.com/wilmoore/omnitranscripts/issues) | [Request Feature](https://github.com/wilmoore/omnitranscripts/issues) | [Discussions](https://github.com/wilmoore/omnitranscripts/discussions)
 
-**Built with ❤️ by [wilmoore](https://github.com/wilmoore)**
+**Built with care by [wilmoore](https://github.com/wilmoore)**
 
 </div>

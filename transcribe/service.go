@@ -1,4 +1,7 @@
+//go:build encore
+
 // Package transcribe provides YouTube video transcription services.
+// This package requires Encore.dev and is only built when the "encore" build tag is set.
 package transcribe
 
 import (
@@ -12,8 +15,8 @@ import (
 	"encore.dev/config"
 	"encore.dev/rlog"
 
-	"videotranscript-app/lib"
-	"videotranscript-app/models"
+	"omnitranscripts/lib"
+	"omnitranscripts/models"
 )
 
 // Config holds the service configuration.
@@ -64,7 +67,7 @@ type SubtitleFiles struct {
 func Health(ctx context.Context) (*HealthResponse, error) {
 	return &HealthResponse{
 		Status:  "ok",
-		Message: "VideoTranscript.app API is running",
+		Message: "OmniTranscripts API is running",
 	}, nil
 }
 

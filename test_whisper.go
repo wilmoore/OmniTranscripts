@@ -1,9 +1,11 @@
+//go:build ignore
+
 package main
 
 import (
 	"fmt"
-	"log"
-	"videotranscript-app/lib"
+
+	"omnitranscripts/lib"
 )
 
 func main() {

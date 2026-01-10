@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"videotranscript-app/models"
+	"omnitranscripts/models"
 )
 
 // WebhookPayload represents the data sent to webhook URLs
@@ -204,7 +204,7 @@ func (wm *WebhookManager) sendWebhook(ctx context.Context, payload WebhookPayloa
 		}
 
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("User-Agent", "VideoTranscript.app/1.0")
+		req.Header.Set("User-Agent", "OmniTranscripts/1.0")
 		req.Header.Set("X-Webhook-Event", payload.Event)
 		req.Header.Set("X-Webhook-Job-ID", payload.JobID)
 

@@ -147,3 +147,4 @@ debug
 *.debug
 trace.outmodels/*.bin
 *.bin
+third_party/

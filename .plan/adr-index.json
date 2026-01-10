@@ -1,0 +1,9 @@
+{
+  "lastSequence": 1,
+  "entries": [
+    {
+      "branch": "feature/rename-omnitranscripts",
+      "adrs": ["0001-rename-to-omnitranscripts.md"]
+    }
+  ]
+}
