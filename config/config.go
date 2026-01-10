@@ -30,7 +30,7 @@ func Load() *Config {
 		AssemblyAIAPIKey: getEnv("ASSEMBLYAI_API_KEY", ""),
 		WhisperServerURL: getEnv("WHISPER_SERVER_URL", ""),
 		WhisperModelPath: getEnv("WHISPER_MODEL_PATH", ""),
-		WorkDir:          getEnv("WORK_DIR", "/tmp/videotranscript"),
+		WorkDir:          getEnv("WORK_DIR", "/tmp/omnitranscripts"),
 		MaxVideoLength:   maxLength,
 		FreeJobLimit:     freeLimit,
 	}

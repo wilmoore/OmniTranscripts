@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"videotranscript-app/jobs"
-	"videotranscript-app/models"
+	"omnitranscripts/jobs"
+	"omnitranscripts/models"
 )
 
 func setupTestApp() *fiber.App {
@@ -126,7 +126,7 @@ func TestJobQueue_Operations(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, jobs.StatusRunning, retrievedJob.Status)
 
-	segments := []jobs.Segment{
+	segments := []models.Segment{
 		{Start: 0.0, End: 5.0, Text: "Test segment"},
 	}
 	job.MarkComplete("Test transcript", segments)
@@ -189,7 +189,7 @@ func BenchmarkJobQueue_Update(b *testing.B) {
 		job.MarkRunning()
 		queue.UpdateJob(job)
 
-		job.MarkComplete("Test transcript", []jobs.Segment{})
+		job.MarkComplete("Test transcript", []models.Segment{})
 		queue.UpdateJob(job)
 	}
 }
@@ -208,7 +208,7 @@ func BenchmarkJobQueue_ConcurrentAccess(b *testing.B) {
 				b.Error(err)
 			}
 
-			job.MarkComplete("Test", []jobs.Segment{})
+			job.MarkComplete("Test", []models.Segment{})
 			queue.UpdateJob(job)
 		}
 	})
@@ -223,7 +223,7 @@ func BenchmarkAPI_HealthEndpoint(b *testing.B) {
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"status":  "ok",
-			"message": "VideoTranscript.app API is running",
+			"message": "OmniTranscripts API is running",
 		})
 	})
 

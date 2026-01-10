@@ -2,23 +2,24 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## VideoTranscript.app - YouTube Video Transcription API
+## OmniTranscripts - Universal Media Transcription Engine
 
-> A Go-based API for transcribing YouTube videos using yt-dlp, FFmpeg, and whisper.cpp with async job processing.
+> A Go-based transcription engine and API for audio and video from any URL. Supports 1000+ platforms via yt-dlp, with audio-first workflows as first-class citizens. Available as a Go library or HTTP API.
 
-## 📚 Documentation Structure
+## Documentation Structure
 
 This project has comprehensive documentation organized in the `docs/` directory:
 
 | Document | Purpose | When to Reference |
 |----------|---------|-------------------|
-| [📖 API Documentation](docs/api.md) | Complete API reference, endpoints, examples | API changes, endpoint questions, integration help |
-| [🏗️ Architecture](docs/architecture.md) | Technical architecture, design patterns, scaling | Understanding codebase structure, performance questions |
-| [🚀 Deployment](docs/deployment.md) | Production deployment guides | Deployment issues, configuration questions |
-| [💻 Development](docs/development.md) | Development setup, workflows, testing | Setting up environment, development practices |
-| [🔧 Troubleshooting](docs/troubleshooting.md) | Common issues and solutions | Error resolution, debugging help |
-| [🤝 Contributing](docs/contributing.md) | Contribution guidelines and standards | Code style, PR process, community guidelines |
-| [📋 Changelog](docs/changelog.md) | Version history and changes | Understanding changes, version differences |
+| [API Documentation](docs/api.md) | Complete API reference, endpoints, examples | API changes, endpoint questions, integration help |
+| [Architecture](docs/architecture.md) | Technical architecture, design patterns, scaling | Understanding codebase structure, performance questions |
+| [Deployment](docs/deployment.md) | Production deployment guides | Deployment issues, configuration questions |
+| [Development](docs/development.md) | Development setup, workflows, testing | Setting up environment, development practices |
+| [Troubleshooting](docs/troubleshooting.md) | Common issues and solutions | Error resolution, debugging help |
+| [Contributing](docs/contributing.md) | Contribution guidelines and standards | Code style, PR process, community guidelines |
+| [Changelog](docs/changelog.md) | Version history and changes | Understanding changes, version differences |
+| [ADRs](docs/decisions/) | Architecture Decision Records | Understanding design decisions |
 
 **Always reference relevant documentation when helping with specific topics.**
 
@@ -48,28 +49,42 @@ go test -run TestSpecificFunction ./package
 go test -v -run TestPostTranscribe_ValidationErrors ./handlers
 ```
 
-**📖 Complete command reference and development workflows:** [docs/development.md](docs/development.md)
+**Complete command reference and development workflows:** [docs/development.md](docs/development.md)
 
 Environment configuration via `.env` file:
 ```bash
 PORT=3000
 API_KEY=dev-api-key-12345
-WORK_DIR=/tmp/videotranscript
+WORK_DIR=/tmp/omnitranscripts
 MAX_VIDEO_LENGTH=1800
 FREE_JOB_LIMIT=5
 ```
 
 ## Architecture Overview
 
-### Core Processing Pipeline
-The application implements a three-stage video transcription pipeline:
+### Dual Consumption Model
+OmniTranscripts supports two consumption modes from one codebase:
 
-1. **Download Stage** (`lib/transcription.go`): Uses go-ytdlp wrapper to extract audio from YouTube URLs
+1. **Go Library** (`engine/` package): Direct programmatic use via import
+2. **HTTP API**: Thin adapter over the engine for external clients
+
+The transcription engine is transport-agnostic. HTTP concerns live at the edge only.
+
+### Core Processing Pipeline
+The application implements a three-stage media transcription pipeline:
+
+1. **Download Stage** (`engine/engine.go`): Uses yt-dlp to extract audio from any supported URL (1000+ platforms)
 2. **Normalize Stage**: Uses ffmpeg-go to convert audio to 16kHz mono WAV format suitable for whisper.cpp
-3. **Transcription Stage**: Executes whisper.cpp binary to generate timestamped transcripts
+3. **Transcription Stage**: Transcribes using whisper.cpp (native, server, or demo fallback)
+
+### Structured Errors
+The `engine.TranscriptionError` type provides stage-specific error reporting:
+- `StageDownload`: Download failures (network, unsupported URL, etc.)
+- `StageNormalize`: Audio conversion failures
+- `StageTranscribe`: Transcription failures
 
 ### Job Processing System
-**Sync vs Async Decision**: Videos ≤2 minutes process synchronously with real-time response polling. Longer videos use async job queue with job ID for status checking.
+**Sync vs Async Decision**: Media <=2 minutes processes synchronously with real-time response polling. Longer media uses async job queue with job ID for status checking.
 
 **Job States** (`jobs/job.go`): `pending` → `running` → `complete`/`error`
 
@@ -80,22 +95,23 @@ The application implements a three-stage video transcription pipeline:
 - `GetTranscribeJob`: Returns job status and results for async jobs
 - Background processing calls `lib.ProcessTranscription` which orchestrates the pipeline
 
-**🏗️ Detailed architecture documentation:** [docs/architecture.md](docs/architecture.md)
+**Detailed architecture documentation:** [docs/architecture.md](docs/architecture.md)
 
 ### Package Organization
 - `main.go`: Fiber server setup, middleware, routing
+- `engine/`: **Public library package** - core transcription types and functions
 - `config/`: Environment variable management with defaults
 - `handlers/`: HTTP request handlers and response logic
 - `jobs/`: Job data structures and thread-safe queue implementation
-- `lib/`: Core business logic (transcription pipeline, auth middleware)
+- `lib/`: Internal utilities (auth middleware, subtitles, webhooks)
 - `models/`: Request/response structs and URL validation
 - `scripts/`: Performance testing automation
 
 ### External Dependencies
-**Runtime Requirements**: The application shells out to external binaries:
-- `yt-dlp`: Must be in PATH for video downloads
-- `ffmpeg`: Must be in PATH for audio processing
-- `whisper.cpp`: Must be in PATH as `whisper.cpp` binary with `ggml-base.en.bin` model
+**Runtime Requirements**: The application uses external binaries:
+- `yt-dlp`: For media downloads (any supported URL)
+- `ffmpeg`: For audio processing
+- `whisper.cpp`: For transcription (optional, has demo fallback)
 
 **Go Libraries**:
 - `github.com/gofiber/fiber/v2`: HTTP framework (Express-like for Go)
@@ -109,10 +125,10 @@ The application implements a three-stage video transcription pipeline:
 Bearer token authentication via `lib.AuthMiddleware()` checks `Authorization: Bearer <token>` against `API_KEY` environment variable. Health endpoint bypasses authentication.
 
 ### File Management
-Temporary files created in `WORK_DIR` with job ID naming. Automatic cleanup via defer statements in `ProcessTranscription`.
+Temporary files created in `WORK_DIR` with job ID naming. Automatic cleanup via defer statements in processing functions.
 
 ### Error Handling
-Errors propagate up through the pipeline with context using `fmt.Errorf` wrapping. Job errors stored in Job.Error field and returned via API.
+Structured errors via `engine.TranscriptionError` provide stage-specific context. Errors propagate up through the pipeline with wrapping. Job errors stored in Job.Error field and returned via API.
 
 ### Testing Architecture
 - Unit tests in `handlers/transcribe_test.go` with Fiber test framework
@@ -126,12 +142,12 @@ Environment variables loaded once at startup via `config.Load()`. No runtime con
 ## API Endpoints
 
 - `GET /health`: Unauthenticated health check
-- `POST /transcribe`: Submit video URL, returns transcript (sync) or job ID (async)
+- `POST /transcribe`: Submit media URL, returns transcript (sync) or job ID (async)
 - `GET /transcribe/{job_id}`: Get job status and results
 
 Request/response handled via `models.TranscribeRequest` and `models.TranscribeResponse` structs.
 
-**📖 Complete API reference with examples:** [docs/api.md](docs/api.md)
+**Complete API reference with examples:** [docs/api.md](docs/api.md)
 
 ## Development Notes
 
@@ -141,7 +157,7 @@ Request/response handled via `models.TranscribeRequest` and `models.TranscribeRe
 - The `parseDuration` function currently returns hardcoded 120 seconds (TODO: implement actual parsing)
 - Job queue is in-memory only - jobs lost on restart (suitable for MVP)
 
-**💻 Complete development setup guide:** [docs/development.md](docs/development.md)
+**Complete development setup guide:** [docs/development.md](docs/development.md)
 
 ## Troubleshooting Reference
 
@@ -151,7 +167,7 @@ For common issues and solutions:
 - **Performance issues**: Memory usage, slow processing, disk space
 - **Deployment problems**: Docker, cloud platform, networking issues
 
-**🔧 Complete troubleshooting guide:** [docs/troubleshooting.md](docs/troubleshooting.md)
+**Complete troubleshooting guide:** [docs/troubleshooting.md](docs/troubleshooting.md)
 
 ## Production Deployment
 
@@ -161,4 +177,4 @@ For production deployments, refer to comprehensive guides covering:
 - **Encore.dev**: Zero-config production deployment
 - **Traditional Servers**: SystemD, process management, reverse proxy setup
 
-**🚀 Complete deployment guides:** [docs/deployment.md](docs/deployment.md)
+**Complete deployment guides:** [docs/deployment.md](docs/deployment.md)

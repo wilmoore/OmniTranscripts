@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"videotranscript-app/jobs"
-	"videotranscript-app/models"
+	"omnitranscripts/jobs"
+	"omnitranscripts/models"
 )
 
 func BenchmarkGetVideoDuration(b *testing.B) {
@@ -55,7 +55,7 @@ func BenchmarkJobCreation(b *testing.B) {
 
 func BenchmarkJobStatusTransitions(b *testing.B) {
 	testURL := "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-	segments := []jobs.Segment{
+	segments := []models.Segment{
 		{Start: 0.0, End: 5.0, Text: "Test segment 1"},
 		{Start: 5.0, End: 10.0, Text: "Test segment 2"},
 	}
@@ -106,7 +106,7 @@ func BenchmarkConcurrentJobProcessing(b *testing.B) {
 			queue.UpdateJob(job)
 
 			// Simulate completion
-			job.MarkComplete("Benchmark transcript", []jobs.Segment{
+			job.MarkComplete("Benchmark transcript", []models.Segment{
 				{Start: 0.0, End: 5.0, Text: "Benchmark test"},
 			})
 			queue.UpdateJob(job)
@@ -130,9 +130,9 @@ func BenchmarkMemoryUsage_JobQueue(b *testing.B) {
 
 func BenchmarkMemoryUsage_LargeTranscript(b *testing.B) {
 	// Create a large transcript with many segments
-	var segments []jobs.Segment
+	var segments []models.Segment
 	for i := 0; i < 1000; i++ {
-		segments = append(segments, jobs.Segment{
+		segments = append(segments, models.Segment{
 			Start: float64(i * 5),
 			End:   float64((i + 1) * 5),
 			Text:  "This is a test segment with some text content that simulates a real transcript",
@@ -189,7 +189,7 @@ func BenchmarkFileOperations(b *testing.B) {
 
 // Performance comparison benchmarks
 func BenchmarkStringOperations_Transcript(b *testing.B) {
-	segments := []jobs.Segment{
+	segments := []models.Segment{
 		{Start: 0.0, End: 5.0, Text: "First segment"},
 		{Start: 5.0, End: 10.0, Text: "Second segment"},
 		{Start: 10.0, End: 15.0, Text: "Third segment"},
@@ -206,7 +206,7 @@ func BenchmarkStringOperations_Transcript(b *testing.B) {
 }
 
 func BenchmarkStringBuilder_Transcript(b *testing.B) {
-	segments := []jobs.Segment{
+	segments := []models.Segment{
 		{Start: 0.0, End: 5.0, Text: "First segment"},
 		{Start: 5.0, End: 10.0, Text: "Second segment"},
 		{Start: 10.0, End: 15.0, Text: "Third segment"},
@@ -225,7 +225,7 @@ func BenchmarkStringBuilder_Transcript(b *testing.B) {
 
 func BenchmarkJSONSerialization_Job(b *testing.B) {
 	job := jobs.NewJob("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
-	job.MarkComplete("Test transcript", []jobs.Segment{
+	job.MarkComplete("Test transcript", []models.Segment{
 		{Start: 0.0, End: 5.0, Text: "Test segment"},
 	})
 

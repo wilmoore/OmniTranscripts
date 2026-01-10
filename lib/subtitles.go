@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"videotranscript-app/models"
+	"omnitranscripts/models"
 )
 
 // SubtitleFormat represents different subtitle formats

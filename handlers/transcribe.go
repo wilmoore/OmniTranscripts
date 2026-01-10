@@ -6,9 +6,9 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"videotranscript-app/jobs"
-	"videotranscript-app/lib"
-	"videotranscript-app/models"
+	"omnitranscripts/jobs"
+	"omnitranscripts/lib"
+	"omnitranscripts/models"
 )
 
 func PostTranscribe(c *fiber.Ctx) error {

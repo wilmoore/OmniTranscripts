@@ -83,8 +83,10 @@ func (j *Job) MarkError(err error) {
 }
 
 func ValidateURL(url string) bool {
-	youtubeRegex := regexp.MustCompile(`^(https?://)?(www\.)?(youtube\.com/watch\?v=|youtu\.be/)[\w-]+`)
-	return youtubeRegex.MatchString(url)
+	// OmniTranscripts supports 1000+ platforms via yt-dlp
+	// Accept any valid HTTP/HTTPS URL with a host
+	urlRegex := regexp.MustCompile(`^https?://[^/\s]+`)
+	return urlRegex.MatchString(url)
 }
 
 func LoadTranscript(filePath string) (string, []Segment, error) {

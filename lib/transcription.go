@@ -2,7 +2,6 @@ package lib
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,8 +9,8 @@ import (
 	"github.com/lrstanley/go-ytdlp"
 	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 
-	"videotranscript-app/config"
-	"videotranscript-app/models"
+	"omnitranscripts/config"
+	"omnitranscripts/models"
 )
 
 func ProcessTranscription(url, jobID string) (string, []models.Segment, error) {
@@ -323,31 +322,3 @@ func writeWhisperSegmentsAsVTT(segments []WhisperSegment, outputPath string) err
 	}
 	return nil
 }
-
-
-// formatSRTTime formats seconds as SRT timestamp (HH:MM:SS,mmm)
-func formatSRTTime(seconds float64) string {
-	totalMs := int(seconds * 1000)
-	ms := totalMs % 1000
-	totalSec := totalMs / 1000
-	sec := totalSec % 60
-	totalMin := totalSec / 60
-	min := totalMin % 60
-	hour := totalMin / 60
-
-	return fmt.Sprintf("%02d:%02d:%02d,%03d", hour, min, sec, ms)
-}
-
-// formatVTTTime formats seconds as VTT timestamp (HH:MM:SS.mmm)
-func formatVTTTime(seconds float64) string {
-	totalMs := int(seconds * 1000)
-	ms := totalMs % 1000
-	totalSec := totalMs / 1000
-	sec := totalSec % 60
-	totalMin := totalSec / 60
-	min := totalMin % 60
-	hour := totalMin / 60
-
-	return fmt.Sprintf("%02d:%02d:%02d.%03d", hour, min, sec, ms)
-}
-

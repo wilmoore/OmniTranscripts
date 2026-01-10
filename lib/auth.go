@@ -5,7 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"videotranscript-app/config"
+	"omnitranscripts/config"
 )
 
 func AuthMiddleware() fiber.Handler {

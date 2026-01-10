@@ -5,7 +5,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN go build -o videotranscript-app
+RUN go build -o omnitranscripts
 
 FROM alpine:latest
 
@@ -28,9 +28,9 @@ RUN apk add --no-cache git make g++ \
     && rm -rf /tmp/whisper
 
 WORKDIR /app
-COPY --from=builder /app/videotranscript-app .
+COPY --from=builder /app/omnitranscripts .
 COPY .env .
 
 EXPOSE 3000
 
-CMD ["./videotranscript-app"]
+CMD ["./omnitranscripts"]

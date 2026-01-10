@@ -1,3 +1,5 @@
+//go:build encore
+
 package transcribe
 
 import (
@@ -6,7 +8,7 @@ import (
 
 	"encore.dev/storage/sqldb"
 
-	"videotranscript-app/models"
+	"omnitranscripts/models"
 )
 
 // Database for job storage
