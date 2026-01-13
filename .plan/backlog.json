@@ -11,7 +11,9 @@
       "source": "/pro:chore",
       "sourceBranch": "chore/test-and-marketplace-prep",
       "createdAt": "2026-01-10T10:00:00Z",
-      "status": "in-progress"
+      "status": "completed",
+      "completedAt": "2026-01-12T00:00:00Z",
+      "prUrl": "https://github.com/wilmoore/omnitranscripts/pull/7"
     },
     {
       "id": 1,
