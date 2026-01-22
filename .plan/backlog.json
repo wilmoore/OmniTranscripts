@@ -11,7 +11,9 @@
       "source": "/pro:bug",
       "sourceBranch": "fix/yt-dlp-subprocess-leak",
       "createdAt": "2026-01-22T09:40:00Z",
-      "status": "in-progress"
+      "status": "resolved",
+      "completedAt": "2026-01-22T00:00:00Z",
+      "prUrl": "https://github.com/wilmoore/OmniTranscripts/pull/9"
     },
     {
       "id": 7,
