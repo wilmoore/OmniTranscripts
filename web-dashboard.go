@@ -37,27 +37,27 @@ var demoTranscripts = map[string]Job{
 }
 
 type Job struct {
-	ID         string    `json:"id"`
-	VideoID    string    `json:"video_id"`
-	URL        string    `json:"url"`
-	Title      string    `json:"title"`
-	Status     string    `json:"status"`
-	Progress   int       `json:"progress"`
-	StartTime  time.Time `json:"start_time"`
-	UpdateTime time.Time `json:"update_time"`
-	LogFile    string    `json:"log_file"`
-	OutputDir  string    `json:"output_dir"`
-	Duration   string    `json:"duration"`
-	FileCount  int       `json:"file_count"`
-	FileSize   string    `json:"file_size"`
-	Stage      string    `json:"stage"`
+	ID            string         `json:"id"`
+	VideoID       string         `json:"video_id"`
+	URL           string         `json:"url"`
+	Title         string         `json:"title"`
+	Status        string         `json:"status"`
+	Progress      int            `json:"progress"`
+	StartTime     time.Time      `json:"start_time"`
+	UpdateTime    time.Time      `json:"update_time"`
+	LogFile       string         `json:"log_file"`
+	OutputDir     string         `json:"output_dir"`
+	Duration      string         `json:"duration"`
+	FileCount     int            `json:"file_count"`
+	FileSize      string         `json:"file_size"`
+	Stage         string         `json:"stage"`
 	StageProgress map[string]int `json:"stage_progress"`
-	CategoryClass string `json:"category_class"`
-	CategoryIcon  string `json:"category_icon"`
-	StatusText    string `json:"status_text"`
+	CategoryClass string         `json:"category_class"`
+	CategoryIcon  string         `json:"category_icon"`
+	StatusText    string         `json:"status_text"`
 	// Transcript fields
-	Transcript    string          `json:"transcript,omitempty"`
-	Segments      []TranscriptSegment `json:"segments,omitempty"`
+	Transcript string              `json:"transcript,omitempty"`
+	Segments   []TranscriptSegment `json:"segments,omitempty"`
 }
 
 type TranscriptSegment struct {
@@ -2564,12 +2564,12 @@ const transactionDetailHTML = `
 `
 
 type DashboardData struct {
-	Jobs         []Job
-	TotalJobs    int
-	RunningJobs  int
+	Jobs          []Job
+	TotalJobs     int
+	RunningJobs   int
 	CompletedJobs int
-	FailedJobs   int
-	QueuedJobs   int
+	FailedJobs    int
+	QueuedJobs    int
 
 	// Percentages for progress bars
 	CompletedPercentage int
@@ -2578,15 +2578,15 @@ type DashboardData struct {
 	QueuedPercentage    int
 
 	// Performance metrics
-	SuccessRate         float64
-	AvgProcessingTime   string
-	TotalDuration       string
-	StorageUsed         string
+	SuccessRate       float64
+	AvgProcessingTime string
+	TotalDuration     string
+	StorageUsed       string
 
 	// API Usage metrics
-	JobsToday      int
-	JobsThisWeek   int
-	ActiveUsers    int
+	JobsToday       int
+	JobsThisWeek    int
+	ActiveUsers     int
 	AvgResponseTime int
 
 	// System health
@@ -2594,10 +2594,10 @@ type DashboardData struct {
 	QueueHealth      string
 	QueueHealthClass string
 	// Business insights for monetization
-	RevenueToday       float64
-	RevenueGrowth      float64
-	AvgRevenuePerJob   float64
-	JobsYesterday      int
+	RevenueToday     float64
+	RevenueGrowth    float64
+	AvgRevenuePerJob float64
+	JobsYesterday    int
 }
 
 func main() {
@@ -2850,19 +2850,19 @@ func addJobHandler(w http.ResponseWriter, r *http.Request) {
 	jobID := generateJobID()
 
 	job := Job{
-		ID:         jobID,
-		VideoID:    videoID,
-		URL:        req.URL,
-		Title:      "Loading...",
-		Status:     "queued",
-		Progress:   0,
-		StartTime:  time.Now(),
-		UpdateTime: time.Now(),
-		LogFile:    fmt.Sprintf("logs/%s.log", jobID),
-		OutputDir:  fmt.Sprintf("transcripts/%s", videoID),
-		Duration:   "00:00",
-		FileCount:  0,
-		FileSize:   "0 KB",
+		ID:            jobID,
+		VideoID:       videoID,
+		URL:           req.URL,
+		Title:         "Loading...",
+		Status:        "queued",
+		Progress:      0,
+		StartTime:     time.Now(),
+		UpdateTime:    time.Now(),
+		LogFile:       fmt.Sprintf("logs/%s.log", jobID),
+		OutputDir:     fmt.Sprintf("transcripts/%s", videoID),
+		Duration:      "00:00",
+		FileCount:     0,
+		FileSize:      "0 KB",
 		CategoryClass: "entertainment",
 		CategoryIcon:  "🎬",
 		StatusText:    "Queued for processing",
@@ -3191,7 +3191,7 @@ func sseHandler(w http.ResponseWriter, r *http.Request) {
 func calculateDashboardData(jobs []Job) DashboardData {
 	// Initialize dashboard data
 	data := DashboardData{
-		Jobs: jobs,
+		Jobs:      jobs,
 		TotalJobs: len(jobs),
 	}
 
@@ -3414,7 +3414,7 @@ func parseLogFile(filename string) (string, int) {
 	matches := re.FindAllStringSubmatch(content, -1)
 	if len(matches) > 0 {
 		if percent, err := strconv.Atoi(matches[len(matches)-1][1]); err == nil {
-			return "transcribing", 50 + (percent/2)
+			return "transcribing", 50 + (percent / 2)
 		}
 	}
 
@@ -3474,17 +3474,17 @@ func formatFileSize(size int64) string {
 
 func calculateBusinessMetrics(data *DashboardData, jobs []Job) {
 	// Pricing assumptions for RapidAPI monetization
-	basePrice := 2.50  // Base price per job
-	premiumMultiplier := 2.0  // Premium tier multiplier
+	basePrice := 2.50        // Base price per job
+	premiumMultiplier := 2.0 // Premium tier multiplier
 
 	// Calculate revenue metrics
 	data.RevenueToday = float64(data.JobsToday) * basePrice
-	data.JobsYesterday = data.JobsToday - 1  // Simulated previous day data
+	data.JobsYesterday = data.JobsToday - 1 // Simulated previous day data
 
 	// Calculate revenue per job with tier detection
 	if data.TotalJobs > 0 {
 		avgDuration := float64(data.TotalJobs * 5) // Assume 5 min avg
-		if avgDuration > 10 { // Longer videos = premium tier
+		if avgDuration > 10 {                      // Longer videos = premium tier
 			data.AvgRevenuePerJob = basePrice * premiumMultiplier
 		} else {
 			data.AvgRevenuePerJob = basePrice
@@ -3540,10 +3540,10 @@ func demoAddTranscriptHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"success": true,
-			"message": "Demo transcript data loaded for job " + jobID,
+			"success":    true,
+			"message":    "Demo transcript data loaded for job " + jobID,
 			"transcript": demoData.Transcript,
-			"segments": demoData.Segments,
+			"segments":   demoData.Segments,
 		})
 		return
 	}

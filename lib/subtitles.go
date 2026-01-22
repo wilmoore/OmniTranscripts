@@ -153,12 +153,12 @@ func ConvertSegmentsToSubtitles(segments []models.Segment, format SubtitleFormat
 
 // SubtitleMetadata contains information about generated subtitle files
 type SubtitleMetadata struct {
-	SRTPath      string `json:"srt_path,omitempty"`
-	VTTPath      string `json:"vtt_path,omitempty"`
-	SegmentCount int    `json:"segment_count"`
+	SRTPath      string  `json:"srt_path,omitempty"`
+	VTTPath      string  `json:"vtt_path,omitempty"`
+	SegmentCount int     `json:"segment_count"`
 	Duration     float64 `json:"duration_seconds"`
-	Language     string `json:"language"`
-	Format       string `json:"format"`
+	Language     string  `json:"language"`
+	Format       string  `json:"format"`
 }
 
 // GetSubtitleMetadata returns metadata about the generated subtitles

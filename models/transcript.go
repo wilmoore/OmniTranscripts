@@ -3,6 +3,7 @@ package models
 import (
 	"bufio"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -87,6 +88,37 @@ func ValidateURL(url string) bool {
 	// Accept any valid HTTP/HTTPS URL with a host
 	urlRegex := regexp.MustCompile(`^https?://[^/\s]+`)
 	return urlRegex.MatchString(url)
+}
+
+// SupportedAudioExtensions lists audio file extensions supported for upload
+var SupportedAudioExtensions = []string{".mp3", ".wav", ".m4a", ".flac", ".ogg", ".aac"}
+
+// SupportedVideoExtensions lists video file extensions supported for upload
+var SupportedVideoExtensions = []string{".mp4", ".mkv", ".webm", ".avi", ".mov"}
+
+// ValidateFileExtension checks if the filename has a supported audio/video extension
+func ValidateFileExtension(filename string) bool {
+	ext := strings.ToLower(filepath.Ext(filename))
+	if ext == "" {
+		return false
+	}
+
+	for _, supported := range SupportedAudioExtensions {
+		if ext == supported {
+			return true
+		}
+	}
+	for _, supported := range SupportedVideoExtensions {
+		if ext == supported {
+			return true
+		}
+	}
+	return false
+}
+
+// GetSupportedExtensions returns all supported file extensions
+func GetSupportedExtensions() []string {
+	return append(SupportedAudioExtensions, SupportedVideoExtensions...)
 }
 
 func LoadTranscript(filePath string) (string, []Segment, error) {

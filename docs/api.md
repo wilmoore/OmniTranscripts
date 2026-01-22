@@ -1,6 +1,6 @@
 # API Documentation
 
-OmniTranscripts provides a simple REST API for transcribing YouTube videos with support for both synchronous and asynchronous processing.
+OmniTranscripts provides a simple REST API for transcribing audio and video from local files, direct media URLs, or 1000+ streaming platforms. Supports both synchronous and asynchronous processing.
 
 ## Base URL
 
@@ -45,7 +45,9 @@ curl http://localhost:3000/health
 
 #### `POST /transcribe`
 
-Submit a YouTube video for transcription. Returns immediate results for short videos (≤2 min) or a job ID for longer videos.
+Submit media for transcription. Accepts either a URL (JSON) or a file upload (multipart/form-data). Returns immediate results for short media (≤2 min) or a job ID for longer media.
+
+#### Option 1: URL-based (JSON)
 
 **Request Body:**
 ```json
@@ -54,7 +56,57 @@ Submit a YouTube video for transcription. Returns immediate results for short vi
 }
 ```
 
-**Response (Short Videos - Immediate):**
+**Example:**
+```bash
+curl -X POST http://localhost:3000/transcribe \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'
+```
+
+#### Option 2: File Upload (multipart/form-data)
+
+Upload local audio or video files directly using multipart/form-data.
+
+**Supported File Types:**
+- Audio: `.mp3`, `.wav`, `.m4a`, `.flac`, `.ogg`, `.aac`
+- Video: `.mp4`, `.mkv`, `.webm`, `.avi`, `.mov`
+
+**Max File Size:** 500MB (configurable via `MAX_UPLOAD_SIZE` environment variable)
+
+**Example:**
+```bash
+# Upload a local file
+curl -X POST http://localhost:3000/transcribe \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "file=@/path/to/recording.mp4"
+
+# Upload with explicit filename
+curl -X POST http://localhost:3000/transcribe \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "file=@./podcast.mp3"
+```
+
+**Response (File Upload Error - Invalid Type):**
+```json
+{
+  "error": "Unsupported file type",
+  "supported_audio": [".mp3", ".wav", ".m4a", ".flac", ".ogg", ".aac"],
+  "supported_video": [".mp4", ".mkv", ".webm", ".avi", ".mov"]
+}
+```
+
+**Response (File Upload Error - Too Large):**
+```json
+{
+  "error": "File too large",
+  "max_size": 524288000
+}
+```
+
+#### Responses
+
+**Response (Short Media - Immediate):**
 ```json
 {
   "transcript": "Complete transcript text...",
@@ -73,7 +125,7 @@ Submit a YouTube video for transcription. Returns immediate results for short vi
 }
 ```
 
-**Response (Long Videos - Async):**
+**Response (Long Media / File Upload - Async):**
 ```json
 {
   "job_id": "job_1234567890"
@@ -83,16 +135,8 @@ Submit a YouTube video for transcription. Returns immediate results for short vi
 **Error Response:**
 ```json
 {
-  "error": "Invalid YouTube URL"
+  "error": "Invalid URL. Must be a valid HTTP/HTTPS URL"
 }
-```
-
-**Example:**
-```bash
-curl -X POST http://localhost:3000/transcribe \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'
 ```
 
 ---
@@ -111,6 +155,10 @@ Retrieve the status and results of a transcription job.
 {
   "id": "job_1234567890",
   "status": "running",
+  "meta": {
+    "source_type": "file",
+    "input_format": "mp4"
+  },
   "created_at": "2024-01-01T12:00:00Z"
 }
 ```
@@ -128,12 +176,13 @@ Retrieve the status and results of a transcription job.
       "text": "First segment text"
     }
   ],
+  "meta": {
+    "source_type": "url",
+    "input_format": "mp3",
+    "processing_time_ms": 42123
+  },
   "created_at": "2024-01-01T12:00:00Z",
-  "completed_at": "2024-01-01T12:02:30Z",
-  "subtitle_files": {
-    "srt_url": "https://your-domain.com/transcripts/job_1234567890/subtitles.srt",
-    "vtt_url": "https://your-domain.com/transcripts/job_1234567890/subtitles.vtt"
-  }
+  "completed_at": "2024-01-01T12:02:30Z"
 }
 ```
 
@@ -163,6 +212,16 @@ curl -X GET http://localhost:3000/transcribe/job_1234567890 \
 | `complete` | Job completed successfully |
 | `error` | Job failed with an error |
 
+## Response Metadata
+
+All job responses include a `meta` object with processing details:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `source_type` | string | `"file"` or `"url"` - indicates input source |
+| `input_format` | string | File extension (e.g., `"mp4"`, `"mp3"`) |
+| `processing_time_ms` | int | Processing duration in milliseconds (only on completion) |
+
 ## Rate Limits
 
 - **Free Tier**: 5 jobs per API key
@@ -179,17 +238,31 @@ curl -X GET http://localhost:3000/transcribe/job_1234567890 \
 | `429` | Too Many Requests (rate limit exceeded) |
 | `500` | Internal Server Error |
 
-## Supported Video Formats
+## Supported Input Sources
 
-The API supports any YouTube video that can be downloaded by yt-dlp:
-- Standard YouTube videos
-- YouTube Shorts
-- Live streams (after they end)
-- Age-restricted videos (with appropriate access)
+### Local File Uploads
+Upload audio or video files directly via `multipart/form-data`:
+- **Audio**: `.mp3`, `.wav`, `.m4a`, `.flac`, `.ogg`, `.aac`
+- **Video**: `.mp4`, `.mkv`, `.webm`, `.avi`, `.mov`
+- **Max size**: 500MB (configurable via `MAX_UPLOAD_SIZE`)
+
+### Direct Media URLs
+Any publicly accessible audio or video URL:
+- `https://example.com/podcast.mp3`
+- `https://cdn.example.com/video.mp4`
+
+### Streaming Platforms (via yt-dlp)
+1000+ platforms supported including:
+- YouTube (videos, Shorts, live streams after they end)
+- Vimeo
+- SoundCloud
+- Twitter/X
+- TikTok
+- And many more...
 
 **Limitations:**
-- Maximum video length: 30 minutes (configurable)
-- Private videos: Not supported
+- Maximum media length: 30 minutes (configurable via `MAX_VIDEO_LENGTH`)
+- Private/paywalled content: Not supported
 - Copyright-protected content: May fail depending on restrictions
 
 ## Response Formats

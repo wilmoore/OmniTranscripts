@@ -14,14 +14,14 @@ import (
 
 // WebhookPayload represents the data sent to webhook URLs
 type WebhookPayload struct {
-	Event     string               `json:"event"`
-	JobID     string               `json:"job_id"`
-	URL       string               `json:"url"`
-	Status    string               `json:"status"`
-	Timestamp time.Time            `json:"timestamp"`
-	Data      *WebhookJobData      `json:"data,omitempty"`
-	Error     string               `json:"error,omitempty"`
-	Metadata  *WebhookMetadata     `json:"metadata,omitempty"`
+	Event     string           `json:"event"`
+	JobID     string           `json:"job_id"`
+	URL       string           `json:"url"`
+	Status    string           `json:"status"`
+	Timestamp time.Time        `json:"timestamp"`
+	Data      *WebhookJobData  `json:"data,omitempty"`
+	Error     string           `json:"error,omitempty"`
+	Metadata  *WebhookMetadata `json:"metadata,omitempty"`
 }
 
 // WebhookJobData contains the job results
@@ -61,8 +61,8 @@ type WebhookConfig struct {
 
 // WebhookManager handles webhook notifications
 type WebhookManager struct {
-	client   *http.Client
-	config   WebhookConfig
+	client     *http.Client
+	config     WebhookConfig
 	retryDelay time.Duration
 }
 
@@ -292,4 +292,3 @@ func WebhookTestPayload(webhookURL string) WebhookPayload {
 		},
 	}
 }
-

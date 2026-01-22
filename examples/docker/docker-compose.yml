@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  omnitranscripts:
+    image: wilmoore/omnitranscripts:latest
+    container_name: omnitranscripts
+    ports:
+      - "3000:3000"
+    environment:
+      - API_KEY=${API_KEY:-your-api-key-here}
+      - PORT=3000
+      - WORK_DIR=/tmp/omnitranscripts
+      - MAX_VIDEO_LENGTH=1800
+    volumes:
+      # Mount local media directory for file access
+      - ./media:/media:ro
+      # Persist work directory for job artifacts
+      - omnitranscripts-work:/tmp/omnitranscripts
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  omnitranscripts-work:

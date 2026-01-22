@@ -1,6 +1,18 @@
 {
-  "lastSequence": 6,
+  "lastSequence": 7,
   "items": [
+    {
+      "id": 7,
+      "title": "README local files positioning + file upload API",
+      "description": "Fix README positioning that anchors users to YouTube/URLs. Add multipart/form-data file upload support to POST /transcribe endpoint. Update tagline, add Local Files section, update Features list, add file upload examples, and add FAQ entry.",
+      "category": "feature",
+      "severity": "medium",
+      "fingerprint": "feature|7|readme-local-files-positioning",
+      "source": "/pro:feature",
+      "sourceBranch": "feat/readme-local-files-positioning",
+      "createdAt": "2026-01-22T00:00:00Z",
+      "status": "in-progress"
+    },
     {
       "id": 6,
       "title": "Test verification and API marketplace preparation",
