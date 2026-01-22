@@ -1,9 +1,13 @@
 {
-  "lastSequence": 1,
+  "lastSequence": 2,
   "entries": [
     {
       "branch": "feature/rename-omnitranscripts",
       "adrs": ["0001-rename-to-omnitranscripts.md"]
+    },
+    {
+      "branch": "feat/readme-local-files-positioning",
+      "adrs": ["0002-examples-directory-for-usage-patterns.md"]
     }
   ]
 }

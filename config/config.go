@@ -16,6 +16,7 @@ type Config struct {
 	WorkDir          string
 	MaxVideoLength   int
 	FreeJobLimit     int
+	MaxUploadSize    int64
 }
 
 func Load() *Config {
@@ -23,6 +24,7 @@ func Load() *Config {
 
 	maxLength, _ := strconv.Atoi(getEnv("MAX_VIDEO_LENGTH", "1800"))
 	freeLimit, _ := strconv.Atoi(getEnv("FREE_JOB_LIMIT", "5"))
+	maxUploadSize, _ := strconv.ParseInt(getEnv("MAX_UPLOAD_SIZE", "524288000"), 10, 64) // 500MB default
 
 	return &Config{
 		Port:             getEnv("PORT", "3000"),
@@ -33,6 +35,7 @@ func Load() *Config {
 		WorkDir:          getEnv("WORK_DIR", "/tmp/omnitranscripts"),
 		MaxVideoLength:   maxLength,
 		FreeJobLimit:     freeLimit,
+		MaxUploadSize:    maxUploadSize,
 	}
 }
 

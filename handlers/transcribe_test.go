@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -48,13 +49,13 @@ func TestPostTranscribe_ValidationErrors(t *testing.T) {
 			name:         "Missing URL",
 			body:         map[string]string{},
 			expectedCode: 400,
-			expectedMsg:  "Invalid YouTube URL",
+			expectedMsg:  "Invalid URL",
 		},
 		{
 			name:         "Invalid URL",
-			body:         map[string]string{"url": "not-a-youtube-url"},
+			body:         map[string]string{"url": "not-a-valid-url"},
 			expectedCode: 400,
-			expectedMsg:  "Invalid YouTube URL",
+			expectedMsg:  "Invalid URL",
 		},
 	}
 
@@ -137,6 +138,126 @@ func TestJobQueue_Operations(t *testing.T) {
 	assert.Equal(t, jobs.StatusComplete, retrievedJob.Status)
 	assert.Equal(t, "Test transcript", retrievedJob.Transcript)
 	assert.Len(t, retrievedJob.Segments, 1)
+}
+
+// File upload tests
+func TestPostTranscribe_FileUpload_NoFile(t *testing.T) {
+	app := setupTestApp()
+
+	// Create empty multipart form
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/transcribe", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Authorization", "Bearer test-key")
+
+	resp, err := app.Test(req, -1)
+	require.NoError(t, err)
+
+	assert.Equal(t, 400, resp.StatusCode)
+
+	var result map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	require.NoError(t, err)
+
+	assert.Contains(t, result["error"], "No file provided")
+}
+
+func TestPostTranscribe_FileUpload_InvalidExtension(t *testing.T) {
+	app := setupTestApp()
+
+	// Create multipart form with invalid file type
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	// Add a file with unsupported extension
+	part, err := writer.CreateFormFile("file", "test.txt")
+	require.NoError(t, err)
+	part.Write([]byte("some text content"))
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/transcribe", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Authorization", "Bearer test-key")
+
+	resp, err := app.Test(req, -1)
+	require.NoError(t, err)
+
+	assert.Equal(t, 400, resp.StatusCode)
+
+	var result map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	require.NoError(t, err)
+
+	assert.Equal(t, "Unsupported file type", result["error"])
+	assert.NotNil(t, result["supported_audio"])
+	assert.NotNil(t, result["supported_video"])
+}
+
+func TestPostTranscribe_FileUpload_ValidFile(t *testing.T) {
+	app := setupTestApp()
+
+	// Create multipart form with valid audio file
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	// Add a file with supported extension (mp3)
+	part, err := writer.CreateFormFile("file", "test.mp3")
+	require.NoError(t, err)
+	// Write some dummy content (not real audio, but tests the flow)
+	part.Write([]byte("fake mp3 content"))
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/transcribe", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Authorization", "Bearer test-key")
+
+	resp, err := app.Test(req, -1)
+	require.NoError(t, err)
+
+	// Should return job_id for async processing
+	assert.Equal(t, 200, resp.StatusCode)
+
+	var result map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	require.NoError(t, err)
+
+	// Should return a job ID
+	assert.NotEmpty(t, result["job_id"])
+}
+
+func TestValidateFileExtension(t *testing.T) {
+	tests := []struct {
+		filename string
+		expected bool
+	}{
+		{"audio.mp3", true},
+		{"audio.wav", true},
+		{"audio.m4a", true},
+		{"audio.flac", true},
+		{"audio.ogg", true},
+		{"audio.aac", true},
+		{"video.mp4", true},
+		{"video.mkv", true},
+		{"video.webm", true},
+		{"video.avi", true},
+		{"video.mov", true},
+		{"AUDIO.MP3", true}, // Case insensitive
+		{"file.txt", false},
+		{"file.pdf", false},
+		{"file.exe", false},
+		{"noextension", false},
+		{"", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.filename, func(t *testing.T) {
+			result := models.ValidateFileExtension(tt.filename)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
 }
 
 // Benchmark tests

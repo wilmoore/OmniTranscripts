@@ -2,6 +2,51 @@
 
 This guide covers common issues and solutions when developing, deploying, or using OmniTranscripts.
 
+## Frequently Asked Questions
+
+### Does OmniTranscripts only work with YouTube?
+
+**No.** YouTube is just one of many supported sources. OmniTranscripts supports:
+
+- **Local audio/video files** - Upload `.mp3`, `.mp4`, `.wav`, and more directly via file upload
+- **Direct media URLs** - Any publicly accessible audio/video URL
+- **1000+ streaming platforms** - YouTube, Vimeo, SoundCloud, Twitter/X, TikTok, and many more via yt-dlp
+
+**File Upload Example:**
+```bash
+curl -X POST http://localhost:3000/transcribe \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "file=@/path/to/recording.mp4"
+```
+
+**Go Library Example (Local Files):**
+```go
+result, err := engine.Transcribe(
+    "/path/to/local/video.mp4",
+    "job-123",
+    engine.DefaultOptions(),
+)
+```
+
+### What file formats are supported for upload?
+
+**Audio:** `.mp3`, `.wav`, `.m4a`, `.flac`, `.ogg`, `.aac`
+**Video:** `.mp4`, `.mkv`, `.webm`, `.avi`, `.mov`
+
+Maximum upload size: 500MB (configurable via `MAX_UPLOAD_SIZE` environment variable)
+
+### What's the difference between URL and file upload?
+
+| Feature | URL-based | File Upload |
+|---------|-----------|-------------|
+| Content Type | `application/json` | `multipart/form-data` |
+| Input | HTTP/HTTPS URL | Local file |
+| Processing | Uses yt-dlp for download | Skips download stage |
+| Short media (<2min) | Sync (immediate result) | Async (job ID) |
+| Long media (>2min) | Async (job ID) | Async (job ID) |
+
+---
+
 ## Common Issues
 
 ### 1. External Tool Dependencies

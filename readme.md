@@ -5,23 +5,36 @@
 [![GitHub stars](https://img.shields.io/github/stars/wilmoore/omnitranscripts?style=flat&logo=github)](https://github.com/wilmoore/omnitranscripts/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/wilmoore/omnitranscripts)](https://github.com/wilmoore/omnitranscripts/issues)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker&logoColor=white)](Dockerfile)
-[![Encore.dev](https://img.shields.io/badge/Encore.dev-Ready-6366F1?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMjIgOFYxNkwxMiAyMkwyIDI2VjhMMTIgMloiIGZpbGw9IiM2MzY2RjEiLz4KPC9zdmc+)](https://encore.dev)
 
-> Universal media transcription engine for audio and video from any URL. Powered by Go, yt-dlp, FFmpeg, and whisper.cpp.
+> A self-hostable transcription engine for **local audio/video files**, direct media URLs, and YouTube.
+> Built in Go. Designed for real pipelines.
+
+OmniTranscripts turns **any audio or video input** into clean, timestamped transcripts via a Go library or HTTP API.
+
+**Supported inputs**
+- Local audio/video files (`.mp4`, `.mp3`, `.wav`)
+- Multipart file uploads
+- Direct media URLs
+- YouTube (including Shorts)
+- TikTok videos
+- Instagram Reels (public)
+- 1000+ additional platforms via yt-dlp
+
+Powered by FFmpeg and Whisper, with a single, deterministic pipeline.
+
+OmniTranscripts exists because most transcription tools are either SaaS-only, YouTube-only, or not designed to fit real automation workflows.
 
 ![logo](./docs/logo.png)
 
 ## Features
 
-- **Universal Media Transcription**: Transcribe audio and video from 1000+ platforms via yt-dlp
-- **Audio-First**: Audio-only workflows are first-class citizens (podcasts, voice memos, audio files)
-- **Dual Consumption**: Use as a Go library or HTTP API from the same codebase
-- **Fast Processing**: Optimized pipeline with native Go libraries and FFmpeg
-- **Async & Sync**: Short media (<2min) returns transcripts immediately, longer media uses job queue
-- **Multiple Output Formats**: SRT, VTT, JSON, TSV, and plain text
-- **Structured Errors**: Stage-specific error reporting (download, normalize, transcribe)
-- **Production Ready**: Database support, metrics, monitoring, and webhooks
-- **Docker & Cloud Ready**: Easy deployment with comprehensive guides
+- **Multi-Source Ingestion**: Local files, file uploads, direct URLs, and 1000+ platforms
+- **Single Pipeline**: Same FFmpeg → Whisper flow regardless of source
+- **Go Library + HTTP API**: Embed or deploy
+- **Sync + Async Processing**: Short jobs return immediately, long jobs queue
+- **Multiple Outputs**: TXT, SRT, VTT, JSON, TSV
+- **Production-Oriented**: Size limits, validation, structured errors, webhooks
+- **Self-Hostable**: Docker, Encore.dev, any cloud
 
 ## Documentation
 
@@ -80,12 +93,24 @@
 
 ### Docker (Recommended)
 ```bash
-# Run with Docker
+# Run with Docker (with local media mount)
 docker run -d \
   --name omnitranscripts \
   -p 3000:3000 \
   -e API_KEY=your-api-key-here \
+  -v $(pwd)/media:/media \
   wilmoore/omnitranscripts:latest
+
+# Transcribe a URL
+curl -X POST http://localhost:3000/transcribe \
+  -H "Authorization: Bearer your-api-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.youtube.com/shorts/VIDEO_ID"}'
+
+# Upload a local file
+curl -X POST http://localhost:3000/transcribe \
+  -H "Authorization: Bearer your-api-key-here" \
+  -F "file=@./media/video.mp4"
 ```
 
 ### Local Development
@@ -120,12 +145,21 @@ encore deploy --env production
 ```go
 import "omnitranscripts/engine"
 
-// Transcribe any URL (YouTube, Vimeo, SoundCloud, direct audio URLs, etc.)
+// Local file
 result, err := engine.Transcribe(
-    "https://example.com/audio.mp3",
-    "job-123",
+    "/path/to/recording.mp4",
+    "job-local-001",
     engine.DefaultOptions(),
 )
+
+// URL (YouTube, Vimeo, SoundCloud, direct media URLs, etc.)
+result, err := engine.Transcribe(
+    "https://example.com/audio.mp3",
+    "job-url-002",
+    engine.DefaultOptions(),
+)
+
+// Handle errors
 if err != nil {
     var tErr *engine.TranscriptionError
     if errors.As(err, &tErr) {
@@ -139,6 +173,8 @@ for _, seg := range result.Segments {
     fmt.Printf("[%0.1fs - %0.1fs] %s\n", seg.Start, seg.End, seg.Text)
 }
 ```
+
+Local files bypass the download stage and go directly through FFmpeg → Whisper.
 
 ### As an HTTP API
 
@@ -200,16 +236,23 @@ Health check endpoint (no authentication required).
 
 ## Usage Examples
 
+For real-world usage patterns (short-form video, Docker, async jobs), see the [`examples/`](examples/) directory.
+
 ### cURL
 
 ```bash
-# Transcribe a video
+# Transcribe from URL
 curl -X POST http://localhost:3000/transcribe \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'
 
-# Transcribe a podcast
+# Transcribe a local file (file upload)
+curl -X POST http://localhost:3000/transcribe \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "file=@/path/to/recording.mp4"
+
+# Transcribe a podcast URL
 curl -X POST http://localhost:3000/transcribe \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
@@ -237,7 +280,59 @@ const response = await fetch('http://localhost:3000/transcribe', {
 const result = await response.json();
 ```
 
-**More usage examples and SDKs:** [docs/api.md](docs/api.md)
+### Short-Form Video
+
+OmniTranscripts works with short-form video platforms out of the box.
+
+**YouTube Shorts**
+```bash
+curl -X POST http://localhost:3000/transcribe \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.youtube.com/shorts/VIDEO_ID"}'
+```
+
+**TikTok**
+```bash
+curl -X POST http://localhost:3000/transcribe \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.tiktok.com/@username/video/VIDEO_ID"}'
+```
+
+**Instagram Reels (public)**
+```bash
+curl -X POST http://localhost:3000/transcribe \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.instagram.com/reel/REEL_ID/"}'
+```
+
+> **Note:** Only public content is supported. Private or authentication-gated content requires additional configuration not covered here.
+
+### More Examples
+
+See the [`examples/`](examples/) directory for real-world usage:
+- **[local-files/](examples/local-files/)** - Local file transcription (Go library + file upload)
+- **[short-form/](examples/short-form/)** - YouTube Shorts, TikTok, Instagram Reels
+- **[docker/](examples/docker/)** - Docker Compose and container workflows
+- **[production/](examples/production/)** - Async job polling and webhooks
+
+**Full API reference:** [docs/api.md](docs/api.md)
+
+## Platform Limitations
+
+These are upstream platform constraints, not OmniTranscripts-specific limitations.
+
+| Limitation | Details |
+|------------|---------|
+| **Private content** | Friends-only Instagram Reels, private TikToks, unlisted YouTube videos requiring auth |
+| **Authentication** | No built-in support for authenticated sessions (cookies, login) |
+| **Region locks** | Some content is geographically restricted |
+| **Rate limits** | Platforms may throttle requests; add delays for batch processing |
+| **Platform changes** | yt-dlp extractors may break when platforms update; keep yt-dlp updated |
+
+For most public content, OmniTranscripts works reliably. Edge cases should be tested before production use.
 
 ## Development Setup
 
@@ -272,9 +367,20 @@ make check         # Run quality checks (fmt + lint + vet + test)
 ## Production Deployment
 
 ### Docker (Recommended)
+
+Docker is the recommended way to run OmniTranscripts in production.
+
 ```bash
+# Build and run
 docker build -t omnitranscripts .
-docker run -p 3000:3000 --env-file .env omnitranscripts
+docker run -d \
+  -p 3000:3000 \
+  --env-file .env \
+  -v $(pwd)/media:/media \
+  omnitranscripts
+
+# Or use Docker Compose (see examples/docker/)
+docker-compose -f examples/docker/docker-compose.yml up -d
 ```
 
 ### Encore.dev (Zero-Config)
