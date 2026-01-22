@@ -20,3 +20,4 @@ We use the [Michael Nygard format](https://cognitect.com/blog/2011/11/15/documen
 
 <!-- New ADRs added below -->
 - [0001. Rename to OmniTranscripts](0001-rename-to-omnitranscripts.md) - Project rename and scope expansion
+- [0003. Context Propagation for Subprocess Management](0003-context-propagation-for-subprocess-management.md) - Prevent subprocess leaks via context cancellation

@@ -1,5 +1,5 @@
 {
-  "lastSequence": 2,
+  "lastSequence": 3,
   "entries": [
     {
       "branch": "feature/rename-omnitranscripts",
@@ -8,6 +8,10 @@
     {
       "branch": "feat/readme-local-files-positioning",
       "adrs": ["0002-examples-directory-for-usage-patterns.md"]
+    },
+    {
+      "branch": "fix/yt-dlp-subprocess-leak",
+      "adrs": ["0003-context-propagation-for-subprocess-management.md"]
     }
   ]
 }
