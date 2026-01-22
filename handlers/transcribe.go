@@ -143,7 +143,11 @@ func handleURLTranscribe(c *fiber.Ctx) error {
 	queue := jobs.GetQueue()
 	queue.AddJob(job)
 
-	duration, err := lib.GetVideoDuration(req.URL)
+	// Use a short timeout for duration check (metadata only)
+	durationCtx, durationCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer durationCancel()
+
+	duration, err := lib.GetVideoDuration(durationCtx, req.URL)
 	if err != nil {
 		job.MarkError(err)
 		queue.UpdateJob(job)
@@ -226,21 +230,31 @@ func GetTranscribeJob(c *fiber.Ctx) error {
 	return c.JSON(response)
 }
 
+// Timeout for short media (<=2 min) - synchronous processing
+const syncProcessingTimeout = 5 * time.Minute
+
+// Timeout for long media (>2 min) - asynchronous processing
+const asyncProcessingTimeout = 30 * time.Minute
+
 func processTranscriptionSync(job *jobs.Job) {
-	processTranscription(job)
+	ctx, cancel := context.WithTimeout(context.Background(), syncProcessingTimeout)
+	defer cancel()
+	processTranscription(ctx, job)
 }
 
 func processTranscriptionAsync(job *jobs.Job) {
-	processTranscription(job)
+	ctx, cancel := context.WithTimeout(context.Background(), asyncProcessingTimeout)
+	defer cancel()
+	processTranscription(ctx, job)
 }
 
-func processTranscription(job *jobs.Job) {
+func processTranscription(ctx context.Context, job *jobs.Job) {
 	queue := jobs.GetQueue()
 
 	job.MarkRunning()
 	queue.UpdateJob(job)
 
-	transcript, segments, err := lib.ProcessTranscription(job.URL, job.ID)
+	transcript, segments, err := lib.ProcessTranscription(ctx, job.URL, job.ID)
 	if err != nil {
 		job.MarkError(err)
 		queue.UpdateJob(job)
@@ -257,12 +271,16 @@ func processFileTranscription(job *jobs.Job, uploadPath string) {
 	// Clean up uploaded file when done
 	defer os.Remove(uploadPath)
 
+	// Use async timeout for file uploads (size unknown in terms of duration)
+	ctx, cancel := context.WithTimeout(context.Background(), asyncProcessingTimeout)
+	defer cancel()
+
 	job.MarkRunning()
 	queue.UpdateJob(job)
 
 	// For local files, we pass the file path directly to yt-dlp
 	// yt-dlp handles local files natively
-	transcript, segments, err := lib.ProcessTranscription(uploadPath, job.ID)
+	transcript, segments, err := lib.ProcessTranscription(ctx, uploadPath, job.ID)
 	if err != nil {
 		job.MarkError(err)
 		queue.UpdateJob(job)

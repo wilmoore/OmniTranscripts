@@ -16,11 +16,12 @@ import (
 
 func BenchmarkGetVideoDuration(b *testing.B) {
 	testURL := "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+	ctx := context.Background()
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, _ = GetVideoDuration(testURL)
+		_, _ = GetVideoDuration(ctx, testURL)
 	}
 }
 

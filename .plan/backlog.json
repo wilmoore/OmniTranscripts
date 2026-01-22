@@ -1,6 +1,18 @@
 {
-  "lastSequence": 7,
+  "lastSequence": 8,
   "items": [
+    {
+      "id": 8,
+      "title": "Fix yt-dlp subprocess leak causing system degradation",
+      "description": "yt-dlp subprocesses are leaking during normal operation, resulting in hundreds to thousands of idle processes remaining alive. Root cause: All yt-dlp invocations use context.Background() which never cancels, preventing subprocess termination on request cancellation, timeout, or error conditions. Fix requires adding context propagation to engine/engine.go and lib/transcription.go, binding contexts to HTTP request lifecycle, and implementing proper timeouts.",
+      "category": "bug",
+      "severity": "critical",
+      "fingerprint": "bug|8|yt-dlp-subprocess-leak",
+      "source": "/pro:bug",
+      "sourceBranch": "fix/yt-dlp-subprocess-leak",
+      "createdAt": "2026-01-22T09:40:00Z",
+      "status": "in-progress"
+    },
     {
       "id": 7,
       "title": "README local files positioning + file upload API",

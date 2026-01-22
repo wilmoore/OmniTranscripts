@@ -4,9 +4,11 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"omnitranscripts/engine"
 )
@@ -27,9 +29,14 @@ func main() {
 
 	fmt.Printf("Transcribing: %s\n", filePath)
 
+	// Create a context with timeout for the transcription
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	defer cancel()
+
 	// Transcribe the local file
 	// Local files bypass the download stage and go directly through FFmpeg → Whisper
 	result, err := engine.Transcribe(
+		ctx,
 		filePath,
 		"local-file-example",
 		engine.DefaultOptions(),
