@@ -1,4 +1,4 @@
-# OmniTranscripts
+![logo](./docs/logo.png)
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat&logo=go&logoColor=white)](https://golang.org/doc/go1.23)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -6,12 +6,10 @@
 [![GitHub issues](https://img.shields.io/github/issues/wilmoore/omnitranscripts)](https://github.com/wilmoore/omnitranscripts/issues)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker&logoColor=white)](Dockerfile)
 
-> A self-hostable transcription engine for **local audio/video files**, direct media URLs, and YouTube.
-> Built in Go. Designed for real pipelines.
+> OmniTranscripts is a self-hostable transcription engine that turns **any local or remote audio/video** into clean, timestamped transcripts via a Go library or HTTP API.
+> OmniTranscripts exists because most transcription tools are either SaaS-only, YouTube-only, or not designed to fit real automation workflows.
 
-OmniTranscripts turns **any audio or video input** into clean, timestamped transcripts via a Go library or HTTP API.
-
-**Supported inputs**
+## Supported inputs
 - Local audio/video files (`.mp4`, `.mp3`, `.wav`)
 - Multipart file uploads
 - Direct media URLs
@@ -20,13 +18,8 @@ OmniTranscripts turns **any audio or video input** into clean, timestamped trans
 - Instagram Reels (public)
 - 1000+ additional platforms via yt-dlp
 
-Powered by FFmpeg and Whisper, with a single, deterministic pipeline.
-
-OmniTranscripts exists because most transcription tools are either SaaS-only, YouTube-only, or not designed to fit real automation workflows.
-
-![logo](./docs/logo.png)
-
 ## Features
+> Built in Go. Powered by FFmpeg and Whisper, with a single, deterministic pipeline. Designed for production pipelines.
 
 - **Multi-Source Ingestion**: Local files, file uploads, direct URLs, and 1000+ platforms
 - **Single Pipeline**: Same FFmpeg → Whisper flow regardless of source

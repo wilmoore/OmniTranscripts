@@ -29,6 +29,7 @@ secrets.json
 # Application binaries
 dashboard
 web-dashboard
+omnitranscripts
 
 # Test binary, built with `go test -c`
 *.test
