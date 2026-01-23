@@ -13,7 +13,10 @@ import (
 	"omnitranscripts/models"
 )
 
-func ProcessTranscription(url, jobID string) (string, []models.Segment, error) {
+// ProcessTranscription orchestrates the full transcription pipeline: download, normalize, transcribe.
+// The context parameter controls subprocess lifecycle - when cancelled, all spawned
+// yt-dlp and ffmpeg processes will be terminated.
+func ProcessTranscription(ctx context.Context, url, jobID string) (string, []models.Segment, error) {
 	cfg := config.Load()
 
 	if err := os.MkdirAll(cfg.WorkDir, 0755); err != nil {
@@ -30,11 +33,11 @@ func ProcessTranscription(url, jobID string) (string, []models.Segment, error) {
 		os.Remove(transcriptFile)
 	}()
 
-	if err := downloadAudio(url, audioFile); err != nil {
+	if err := downloadAudio(ctx, url, audioFile); err != nil {
 		return "", nil, fmt.Errorf("failed to download audio: %w", err)
 	}
 
-	if err := normalizeAudio(audioFile, normalizedAudio); err != nil {
+	if err := normalizeAudio(ctx, audioFile, normalizedAudio); err != nil {
 		return "", nil, fmt.Errorf("failed to normalize audio: %w", err)
 	}
 
@@ -50,14 +53,14 @@ func ProcessTranscription(url, jobID string) (string, []models.Segment, error) {
 	return transcript, segments, nil
 }
 
-func downloadAudio(url, outputPath string) error {
+func downloadAudio(ctx context.Context, url, outputPath string) error {
 	dl := ytdlp.New().
 		ExtractAudio().
 		AudioFormat("wav").
 		AudioQuality("0").
 		Output(outputPath)
 
-	result, err := dl.Run(context.Background(), url)
+	result, err := dl.Run(ctx, url)
 	if err != nil {
 		return fmt.Errorf("yt-dlp failed: %w", err)
 	}
@@ -69,18 +72,20 @@ func downloadAudio(url, outputPath string) error {
 	return nil
 }
 
-func normalizeAudio(inputPath, outputPath string) error {
-	err := ffmpeg_go.Input(inputPath).
+func normalizeAudio(ctx context.Context, inputPath, outputPath string) error {
+	stream := ffmpeg_go.Input(inputPath).
 		Audio().
 		Output(outputPath, ffmpeg_go.KwArgs{
 			"ar":  16000,
 			"ac":  1,
 			"c:a": "pcm_s16le",
 			"y":   nil,
-		}).
-		Run()
+		})
 
-	if err != nil {
+	// Set the context on the stream to enable cancellation
+	stream.Context = ctx
+
+	if err := stream.Run(); err != nil {
 		return fmt.Errorf("ffmpeg normalization failed: %w", err)
 	}
 
@@ -250,10 +255,13 @@ func writeTranscriptFiles(transcript string, segments []WhisperSegment, audioPat
 	return nil
 }
 
-func GetVideoDuration(url string) (int, error) {
+// GetVideoDuration returns the duration of media at the given URL in seconds.
+// The context parameter controls subprocess lifecycle - when cancelled,
+// the yt-dlp process will be terminated.
+func GetVideoDuration(ctx context.Context, url string) (int, error) {
 	dl := ytdlp.New()
 
-	result, err := dl.Run(context.Background(), url, "--get-duration", "--no-warnings")
+	result, err := dl.Run(ctx, url, "--get-duration", "--no-warnings")
 	if err != nil {
 		return 0, fmt.Errorf("failed to get video info: %w", err)
 	}

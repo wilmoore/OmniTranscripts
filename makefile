@@ -288,6 +288,47 @@ clean-models: ## Remove downloaded models
 	@rm -rf models/
 	@echo "$(GREEN)Models cleaned$(NC)"
 
+##@ Process Management
+.PHONY: ps
+ps: ## Show orphaned yt-dlp/ffmpeg processes
+	@echo "$(BLUE)Checking for orphaned processes...$(NC)"
+	@echo ""
+	@echo "yt-dlp processes: $$(pgrep -f yt-dlp 2>/dev/null | wc -l | tr -d ' ')"
+	@echo "ffmpeg processes: $$(pgrep -f ffmpeg 2>/dev/null | wc -l | tr -d ' ')"
+	@echo ""
+	@pgrep -fl yt-dlp 2>/dev/null || echo "$(GREEN)No yt-dlp processes$(NC)"
+	@pgrep -fl ffmpeg 2>/dev/null | grep -v "pgrep" || echo "$(GREEN)No ffmpeg processes$(NC)"
+
+.PHONY: ps-count
+ps-count: ## Count orphaned processes (for scripting)
+	@echo "yt-dlp:$$(pgrep -f yt-dlp 2>/dev/null | wc -l | tr -d ' ') ffmpeg:$$(pgrep -f ffmpeg 2>/dev/null | wc -l | tr -d ' ')"
+
+.PHONY: ps-watch
+ps-watch: ## Watch process counts continuously
+	@echo "$(BLUE)Watching process counts (Ctrl+C to exit)...$(NC)"
+	@echo "Time                 yt-dlp  ffmpeg"
+	@while true; do \
+		printf "$$(date '+%Y-%m-%d %H:%M:%S')  %6s  %6s\n" \
+			"$$(pgrep -f yt-dlp 2>/dev/null | wc -l | tr -d ' ')" \
+			"$$(pgrep -f ffmpeg 2>/dev/null | wc -l | tr -d ' ')"; \
+		sleep 2; \
+	done
+
+.PHONY: ps-kill
+ps-kill: ## Kill all orphaned yt-dlp/ffmpeg processes
+	@echo "$(YELLOW)Killing orphaned processes...$(NC)"
+	@pkill -f yt-dlp 2>/dev/null && echo "$(GREEN)Killed yt-dlp processes$(NC)" || echo "No yt-dlp processes to kill"
+	@pkill -f ffmpeg 2>/dev/null && echo "$(GREEN)Killed ffmpeg processes$(NC)" || echo "No ffmpeg processes to kill"
+	@echo "$(GREEN)Cleanup complete$(NC)"
+
+.PHONY: ps-kill-ytdlp
+ps-kill-ytdlp: ## Kill only yt-dlp processes
+	@pkill -f yt-dlp 2>/dev/null && echo "$(GREEN)Killed yt-dlp processes$(NC)" || echo "No yt-dlp processes to kill"
+
+.PHONY: ps-kill-ffmpeg
+ps-kill-ffmpeg: ## Kill only ffmpeg processes
+	@pkill -f ffmpeg 2>/dev/null && echo "$(GREEN)Killed ffmpeg processes$(NC)" || echo "No ffmpeg processes to kill"
+
 ##@ Utilities
 .PHONY: clean
 clean: ## Clean build artifacts

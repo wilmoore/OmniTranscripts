@@ -90,7 +90,8 @@ func Transcribe(ctx context.Context, req *TranscribeRequest) (*TranscribeRespons
 	}
 
 	// Get video duration to determine processing strategy
-	duration, err := lib.GetVideoDuration(req.URL)
+	// Use request context for proper cancellation propagation
+	duration, err := lib.GetVideoDuration(ctx, req.URL)
 	if err != nil {
 		rlog.Error("failed to get video duration", "error", err, "url", req.URL)
 		return nil, &errs.Error{
@@ -106,7 +107,8 @@ func Transcribe(ctx context.Context, req *TranscribeRequest) (*TranscribeRespons
 	if duration <= 120 {
 		rlog.Info("processing video synchronously", "duration", duration, "job_id", job.ID)
 
-		transcript, segments, err := lib.ProcessTranscription(req.URL, job.ID)
+		// Use request context for proper cancellation propagation
+		transcript, segments, err := lib.ProcessTranscription(ctx, req.URL, job.ID)
 		if err != nil {
 			rlog.Error("transcription failed", "error", err, "job_id", job.ID)
 			return nil, &errs.Error{
@@ -229,8 +231,8 @@ func processJobAsync(ctx context.Context, job *models.Job) error {
 		return err
 	}
 
-	// Process transcription
-	transcript, segments, err := lib.ProcessTranscription(job.URL, job.ID)
+	// Process transcription with context for proper cancellation
+	transcript, segments, err := lib.ProcessTranscription(ctx, job.URL, job.ID)
 	if err != nil {
 		processingTime := time.Since(startTime)
 		rlog.Error("async transcription failed", "error", err, "job_id", job.ID)
