@@ -17,6 +17,9 @@ type Config struct {
 	MaxVideoLength   int
 	FreeJobLimit     int
 	MaxUploadSize    int64
+	// MCP server configuration
+	MCPEnabled  bool
+	MCPEndpoint string
 }
 
 func Load() *Config {
@@ -25,6 +28,7 @@ func Load() *Config {
 	maxLength, _ := strconv.Atoi(getEnv("MAX_VIDEO_LENGTH", "1800"))
 	freeLimit, _ := strconv.Atoi(getEnv("FREE_JOB_LIMIT", "5"))
 	maxUploadSize, _ := strconv.ParseInt(getEnv("MAX_UPLOAD_SIZE", "524288000"), 10, 64) // 500MB default
+	mcpEnabled := getEnv("MCP_ENABLED", "true") == "true"
 
 	return &Config{
 		Port:             getEnv("PORT", "3000"),
@@ -36,6 +40,8 @@ func Load() *Config {
 		MaxVideoLength:   maxLength,
 		FreeJobLimit:     freeLimit,
 		MaxUploadSize:    maxUploadSize,
+		MCPEnabled:       mcpEnabled,
+		MCPEndpoint:      getEnv("MCP_ENDPOINT", "/mcp"),
 	}
 }
 

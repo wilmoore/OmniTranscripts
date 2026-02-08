@@ -1,5 +1,5 @@
 {
-  "lastSequence": 3,
+  "lastSequence": 4,
   "entries": [
     {
       "branch": "feature/rename-omnitranscripts",
@@ -12,6 +12,10 @@
     {
       "branch": "fix/yt-dlp-subprocess-leak",
       "adrs": ["0003-context-propagation-for-subprocess-management.md"]
+    },
+    {
+      "branch": "feat/mcp-server-chatgpt-integration",
+      "adrs": ["0004-async-first-mcp-server-integration.md"]
     }
   ]
 }

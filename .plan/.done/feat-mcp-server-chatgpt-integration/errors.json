@@ -1,0 +1,18 @@
+{
+  "attempts": [
+    {
+      "timestamp": "2026-02-01T06:12:17Z",
+      "tool": "Bash",
+      "error": "go build ./...",
+      "status": "unresolved"
+    },
+    {
+      "timestamp": "2026-02-01T06:12:41Z",
+      "tool": "Bash",
+      "error": "make test-short",
+      "status": "unresolved"
+    }
+  ],
+  "strikeCount": 1,
+  "lastErrorHash": "25461235"
+}

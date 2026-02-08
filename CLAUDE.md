@@ -13,6 +13,7 @@ This project has comprehensive documentation organized in the `docs/` directory:
 | Document | Purpose | When to Reference |
 |----------|---------|-------------------|
 | [API Documentation](docs/api.md) | Complete API reference, endpoints, examples | API changes, endpoint questions, integration help |
+| [ChatGPT Integration](docs/chatgpt-integration.md) | MCP server setup for ChatGPT | ChatGPT/MCP integration, OpenAI Apps SDK |
 | [Architecture](docs/architecture.md) | Technical architecture, design patterns, scaling | Understanding codebase structure, performance questions |
 | [Deployment](docs/deployment.md) | Production deployment guides | Deployment issues, configuration questions |
 | [Development](docs/development.md) | Development setup, workflows, testing | Setting up environment, development practices |
@@ -58,6 +59,9 @@ API_KEY=dev-api-key-12345
 WORK_DIR=/tmp/omnitranscripts
 MAX_VIDEO_LENGTH=1800
 FREE_JOB_LIMIT=5
+# MCP Server (ChatGPT integration)
+MCP_ENABLED=true
+MCP_ENDPOINT=/mcp
 ```
 
 ## Architecture Overview
@@ -98,12 +102,13 @@ The `engine.TranscriptionError` type provides stage-specific error reporting:
 **Detailed architecture documentation:** [docs/architecture.md](docs/architecture.md)
 
 ### Package Organization
-- `main.go`: Fiber server setup, middleware, routing
+- `main.go`: Fiber server setup, middleware, routing, MCP server mounting
 - `engine/`: **Public library package** - core transcription types and functions
 - `config/`: Environment variable management with defaults
 - `handlers/`: HTTP request handlers and response logic
 - `jobs/`: Job data structures and thread-safe queue implementation
 - `lib/`: Internal utilities (auth middleware, subtitles, webhooks)
+- `mcp/`: MCP (Model Context Protocol) server for ChatGPT integration
 - `models/`: Request/response structs and URL validation
 - `scripts/`: Performance testing automation
 
@@ -118,6 +123,7 @@ The `engine.TranscriptionError` type provides stage-specific error reporting:
 - `github.com/lrstanley/go-ytdlp`: Go wrapper for yt-dlp
 - `github.com/u2takey/ffmpeg-go`: Go wrapper for FFmpeg
 - `github.com/google/uuid`: Job ID generation
+- `github.com/mark3labs/mcp-go`: MCP protocol implementation for ChatGPT integration
 
 ## Key Implementation Details
 
@@ -141,13 +147,19 @@ Environment variables loaded once at startup via `config.Load()`. No runtime con
 
 ## API Endpoints
 
+### HTTP API
 - `GET /health`: Unauthenticated health check
 - `POST /transcribe`: Submit media URL, returns transcript (sync) or job ID (async)
 - `GET /transcribe/{job_id}`: Get job status and results
 
 Request/response handled via `models.TranscribeRequest` and `models.TranscribeResponse` structs.
 
+### MCP Server (ChatGPT Integration)
+- `POST/GET/DELETE /mcp`: MCP protocol endpoint for ChatGPT Apps SDK
+- Tools: `transcribe_url` (start transcription), `get_transcription` (check status/retrieve results)
+
 **Complete API reference with examples:** [docs/api.md](docs/api.md)
+**ChatGPT integration guide:** [docs/chatgpt-integration.md](docs/chatgpt-integration.md)
 
 ## Development Notes
 
