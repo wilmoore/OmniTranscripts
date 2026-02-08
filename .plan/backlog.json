@@ -1,6 +1,19 @@
 {
-  "lastSequence": 8,
+  "lastSequence": 9,
   "items": [
+    {
+      "id": 9,
+      "title": "MCP Server + ChatGPT Apps SDK Integration",
+      "description": "Add an MCP (Model Context Protocol) server to OmniTranscripts to enable ChatGPT integration via the OpenAI Apps SDK. Allows users to submit YouTube URLs and get transcripts for summarization directly in ChatGPT. Includes: implementing MCP server with mark3labs/mcp-go, exposing transcribe_url and get_media_duration tools, configuring HTTP/SSE transport, and documenting ChatGPT app registration.",
+      "category": "feature",
+      "severity": "medium",
+      "fingerprint": "feature|9|mcp-server-chatgpt-integration",
+      "source": "/pro:feature",
+      "sourceBranch": "feat/mcp-server-chatgpt-integration",
+      "createdAt": "2026-02-01T12:00:00Z",
+      "status": "resolved",
+      "completedAt": "2026-02-07T00:00:00Z"
+    },
     {
       "id": 8,
       "title": "Fix yt-dlp subprocess leak causing system degradation",

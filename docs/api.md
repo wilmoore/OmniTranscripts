@@ -393,6 +393,34 @@ else:
     print(result['transcript'])  # Short video, immediate result
 ```
 
+## MCP Server (ChatGPT Integration)
+
+OmniTranscripts includes an MCP (Model Context Protocol) server for integration with ChatGPT via the OpenAI Apps SDK.
+
+### Endpoint
+
+```
+POST/GET/DELETE /mcp
+```
+
+### MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `transcribe_url` | Start transcription of a video/audio URL, returns job_id |
+| `get_transcription` | Check status and retrieve transcript for a job |
+
+### Configuration
+
+```bash
+MCP_ENABLED=true   # Enable/disable MCP server (default: true)
+MCP_ENDPOINT=/mcp  # Endpoint path (default: /mcp)
+```
+
+For detailed setup instructions, see [ChatGPT Integration Guide](chatgpt-integration.md).
+
+---
+
 ## Webhooks (Coming Soon)
 
 Future versions will support webhook notifications for job completion:

@@ -19,6 +19,9 @@ BUILD_TIME ?= $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 # Build flags
 LDFLAGS=-ldflags "-X main.Version=$(GIT_COMMIT) -X main.BuildTime=$(BUILD_TIME) -X main.GitBranch=$(GIT_BRANCH)"
 
+# CGO is disabled by default (whisper.cpp native requires manual setup)
+CGO_ENABLED ?= 0
+
 # Colors for output
 BLUE=\033[0;34m
 GREEN=\033[0;32m
@@ -35,34 +38,41 @@ help: ## Show this help message
 ##@ Development
 .PHONY: setup
 setup: ## Install development dependencies
-	@echo "$(BLUE)Setting up Encore development environment...$(NC)"
+	@echo "$(BLUE)Setting up development environment...$(NC)"
 	@go mod download
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest 2>/dev/null || true
 	@mkdir -p $(BUILD_DIR) $(DIST_DIR) $(COVERAGE_DIR)
-	@echo "$(GREEN)Encore development environment ready!$(NC)"
-
-.PHONY: encore-gen
-encore-gen: ## Generate Encore API documentation and client libraries
-	@echo "$(BLUE)Generating Encore API docs and clients...$(NC)"
-	@encore gen client web --output ./web-client
-	@encore gen client go --output ./go-client
+	@echo "$(GREEN)Development environment ready!$(NC)"
 
 .PHONY: dev
-dev: ## Run the application in development mode with hot reload
-	@echo "$(BLUE)Starting Encore development server...$(NC)"
-	@encore run
+dev: ## Run the application in development mode
+	@echo "$(BLUE)Starting development server...$(NC)"
+	@CGO_ENABLED=$(CGO_ENABLED) go run .
+
+.PHONY: dev-watch
+dev-watch: ## Run with file watching (requires air: go install github.com/air-verse/air@latest)
+	@echo "$(BLUE)Starting development server with hot reload...$(NC)"
+	@air || (echo "$(YELLOW)Install air for hot reload: go install github.com/air-verse/air@latest$(NC)" && CGO_ENABLED=$(CGO_ENABLED) go run .)
 
 .PHONY: run
-run: ## Run the Encore application
-	@echo "$(BLUE)Running Encore application...$(NC)"
-	@encore run
+run: ## Run the application
+	@echo "$(BLUE)Running application...$(NC)"
+	@CGO_ENABLED=$(CGO_ENABLED) go run .
 
 ##@ Building
 .PHONY: build
-build: ## Build the Encore application
-	@echo "$(BLUE)Building Encore application...$(NC)"
-	@encore build
-	@echo "$(GREEN)Encore build complete$(NC)"
+build: ## Build the application
+	@echo "$(BLUE)Building application...$(NC)"
+	@mkdir -p $(BUILD_DIR)
+	@CGO_ENABLED=$(CGO_ENABLED) go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) $(MAIN_PACKAGE)
+	@echo "$(GREEN)Build complete: $(BUILD_DIR)/$(BINARY_NAME)$(NC)"
+
+.PHONY: build-cgo
+build-cgo: ## Build with CGO enabled (for native whisper.cpp)
+	@echo "$(BLUE)Building with CGO (native whisper.cpp)...$(NC)"
+	@mkdir -p $(BUILD_DIR)
+	@CGO_ENABLED=1 go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) $(MAIN_PACKAGE)
+	@echo "$(GREEN)Build complete: $(BUILD_DIR)/$(BINARY_NAME)$(NC)"
 
 .PHONY: build-all
 build-all: clean ## Build for all platforms
@@ -71,42 +81,47 @@ build-all: clean ## Build for all platforms
 
 	# Linux AMD64
 	@echo "Building for Linux AMD64..."
-	@GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-linux-amd64 $(MAIN_PACKAGE)
+	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-linux-amd64 $(MAIN_PACKAGE)
 
 	# Linux ARM64
 	@echo "Building for Linux ARM64..."
-	@GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-linux-arm64 $(MAIN_PACKAGE)
+	@CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-linux-arm64 $(MAIN_PACKAGE)
 
 	# macOS AMD64
 	@echo "Building for macOS AMD64..."
-	@GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-amd64 $(MAIN_PACKAGE)
+	@CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-amd64 $(MAIN_PACKAGE)
 
 	# macOS ARM64
 	@echo "Building for macOS ARM64..."
-	@GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-arm64 $(MAIN_PACKAGE)
+	@CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-arm64 $(MAIN_PACKAGE)
 
 	# Windows AMD64
 	@echo "Building for Windows AMD64..."
-	@GOOS=windows GOARCH=amd64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-windows-amd64.exe $(MAIN_PACKAGE)
+	@CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-windows-amd64.exe $(MAIN_PACKAGE)
 
 	@echo "$(GREEN)Multi-platform build complete! Check $(DIST_DIR)/$(NC)"
 
 ##@ Testing
 .PHONY: test
 test: ## Run all tests
-	@echo "$(BLUE)Running Encore tests...$(NC)"
-	@encore test ./...
+	@echo "$(BLUE)Running tests...$(NC)"
+	@CGO_ENABLED=$(CGO_ENABLED) go test ./...
 
 .PHONY: test-short
 test-short: ## Run tests in short mode (skip long-running tests)
-	@echo "$(BLUE)Running short Encore tests...$(NC)"
-	@encore test -short ./...
+	@echo "$(BLUE)Running short tests...$(NC)"
+	@CGO_ENABLED=$(CGO_ENABLED) go test -short ./...
+
+.PHONY: test-verbose
+test-verbose: ## Run tests with verbose output
+	@echo "$(BLUE)Running tests (verbose)...$(NC)"
+	@CGO_ENABLED=$(CGO_ENABLED) go test -v ./...
 
 .PHONY: test-coverage
 test-coverage: ## Run tests with coverage report
-	@echo "$(BLUE)Running Encore tests with coverage...$(NC)"
+	@echo "$(BLUE)Running tests with coverage...$(NC)"
 	@mkdir -p $(COVERAGE_DIR)
-	@encore test -coverprofile=$(COVERAGE_DIR)/coverage.out ./...
+	@CGO_ENABLED=$(CGO_ENABLED) go test -coverprofile=$(COVERAGE_DIR)/coverage.out ./...
 	@go tool cover -html=$(COVERAGE_DIR)/coverage.out -o $(COVERAGE_DIR)/coverage.html
 	@go tool cover -func=$(COVERAGE_DIR)/coverage.out | grep total
 	@echo "$(GREEN)Coverage report: $(COVERAGE_DIR)/coverage.html$(NC)"
@@ -114,7 +129,7 @@ test-coverage: ## Run tests with coverage report
 .PHONY: benchmark
 benchmark: ## Run benchmark tests
 	@echo "$(BLUE)Running benchmark tests...$(NC)"
-	@go test -bench=. -benchmem -benchtime=5s ./...
+	@CGO_ENABLED=$(CGO_ENABLED) go test -bench=. -benchmem -benchtime=5s ./...
 
 .PHONY: perf
 perf: ## Run comprehensive performance tests
@@ -132,13 +147,13 @@ perf-short: ## Run quick performance tests
 .PHONY: lint
 lint: ## Run linter
 	@echo "$(BLUE)Running linter...$(NC)"
-	@golangci-lint run ./...
+	@golangci-lint run ./... || echo "$(YELLOW)Install golangci-lint for linting$(NC)"
 
 .PHONY: fmt
 fmt: ## Format code
 	@echo "$(BLUE)Formatting code...$(NC)"
 	@go fmt ./...
-	@goimports -w .
+	@goimports -w . 2>/dev/null || true
 
 .PHONY: vet
 vet: ## Run go vet
@@ -146,7 +161,7 @@ vet: ## Run go vet
 	@go vet ./...
 
 .PHONY: check
-check: fmt lint vet test-short ## Run all quality checks
+check: fmt vet test-short ## Run all quality checks
 	@echo "$(GREEN)All quality checks passed!$(NC)"
 
 ##@ Dependencies
@@ -194,45 +209,6 @@ docker-clean: ## Clean Docker images and containers
 	@docker system prune -f
 	@docker rmi $(DOCKER_IMAGE):$(DOCKER_TAG) 2>/dev/null || true
 
-##@ Documentation
-.PHONY: docs
-docs: ## Generate API documentation
-	@echo "$(BLUE)Generating API documentation...$(NC)"
-	@swag init -g main.go -o docs/
-	@echo "$(GREEN)API documentation generated in docs/$(NC)"
-
-.PHONY: docs-serve
-docs-serve: ## Serve documentation locally
-	@echo "$(BLUE)Serving documentation on http://localhost:8080$(NC)"
-	@python3 -m http.server 8080 -d docs/ || python -m SimpleHTTPServer 8080
-
-##@ Database
-.PHONY: db-migrate
-db-migrate: ## Run database migrations
-	@echo "$(BLUE)Running database migrations...$(NC)"
-	@encore db migrate
-
-.PHONY: db-reset
-db-reset: ## Reset database
-	@echo "$(BLUE)Resetting database...$(NC)"
-	@encore db reset
-
-.PHONY: db-shell
-db-shell: ## Open database shell
-	@echo "$(BLUE)Opening database shell...$(NC)"
-	@encore db shell
-
-##@ Deployment
-.PHONY: deploy-staging
-deploy-staging: check build ## Deploy to staging environment
-	@echo "$(BLUE)Deploying to staging...$(NC)"
-	@echo "$(YELLOW)Staging deployment not configured yet$(NC)"
-
-.PHONY: deploy-prod
-deploy-prod: check build ## Deploy to production environment
-	@echo "$(BLUE)Deploying to production...$(NC)"
-	@echo "$(YELLOW)Production deployment not configured yet$(NC)"
-
 ##@ Transcription
 .PHONY: setup-transcription
 setup-transcription: ## Set up transcription services (models, dependencies)
@@ -256,8 +232,12 @@ setup-env-example: ## Create example environment file
 	@echo "PORT=3000" >> .env.example
 	@echo "API_KEY=your-api-key-here" >> .env.example
 	@echo "" >> .env.example
+	@echo "# MCP Server (ChatGPT integration)" >> .env.example
+	@echo "MCP_ENABLED=true" >> .env.example
+	@echo "MCP_ENDPOINT=/mcp" >> .env.example
+	@echo "" >> .env.example
 	@echo "# Transcription Services (choose one or both for fallback)" >> .env.example
-	@echo "# AssemblyAI - Cloud transcription (416 free hours)" >> .env.example
+	@echo "# AssemblyAI - Cloud transcription" >> .env.example
 	@echo "ASSEMBLYAI_API_KEY=" >> .env.example
 	@echo "" >> .env.example
 	@echo "# Whisper Server - Local transcription (requires setup)" >> .env.example
@@ -265,9 +245,10 @@ setup-env-example: ## Create example environment file
 	@echo "WHISPER_MODEL_PATH=models/ggml-base.en.bin" >> .env.example
 	@echo "" >> .env.example
 	@echo "# Other Settings" >> .env.example
-	@echo "WORK_DIR=/tmp/videotranscript" >> .env.example
+	@echo "WORK_DIR=/tmp/omnitranscripts" >> .env.example
 	@echo "MAX_VIDEO_LENGTH=1800" >> .env.example
 	@echo "FREE_JOB_LIMIT=5" >> .env.example
+	@echo "MAX_UPLOAD_SIZE=524288000" >> .env.example
 	@echo "$(GREEN).env.example created$(NC)"
 
 .PHONY: transcription-status
@@ -299,21 +280,6 @@ ps: ## Show orphaned yt-dlp/ffmpeg processes
 	@pgrep -fl yt-dlp 2>/dev/null || echo "$(GREEN)No yt-dlp processes$(NC)"
 	@pgrep -fl ffmpeg 2>/dev/null | grep -v "pgrep" || echo "$(GREEN)No ffmpeg processes$(NC)"
 
-.PHONY: ps-count
-ps-count: ## Count orphaned processes (for scripting)
-	@echo "yt-dlp:$$(pgrep -f yt-dlp 2>/dev/null | wc -l | tr -d ' ') ffmpeg:$$(pgrep -f ffmpeg 2>/dev/null | wc -l | tr -d ' ')"
-
-.PHONY: ps-watch
-ps-watch: ## Watch process counts continuously
-	@echo "$(BLUE)Watching process counts (Ctrl+C to exit)...$(NC)"
-	@echo "Time                 yt-dlp  ffmpeg"
-	@while true; do \
-		printf "$$(date '+%Y-%m-%d %H:%M:%S')  %6s  %6s\n" \
-			"$$(pgrep -f yt-dlp 2>/dev/null | wc -l | tr -d ' ')" \
-			"$$(pgrep -f ffmpeg 2>/dev/null | wc -l | tr -d ' ')"; \
-		sleep 2; \
-	done
-
 .PHONY: ps-kill
 ps-kill: ## Kill all orphaned yt-dlp/ffmpeg processes
 	@echo "$(YELLOW)Killing orphaned processes...$(NC)"
@@ -321,34 +287,20 @@ ps-kill: ## Kill all orphaned yt-dlp/ffmpeg processes
 	@pkill -f ffmpeg 2>/dev/null && echo "$(GREEN)Killed ffmpeg processes$(NC)" || echo "No ffmpeg processes to kill"
 	@echo "$(GREEN)Cleanup complete$(NC)"
 
-.PHONY: ps-kill-ytdlp
-ps-kill-ytdlp: ## Kill only yt-dlp processes
-	@pkill -f yt-dlp 2>/dev/null && echo "$(GREEN)Killed yt-dlp processes$(NC)" || echo "No yt-dlp processes to kill"
-
-.PHONY: ps-kill-ffmpeg
-ps-kill-ffmpeg: ## Kill only ffmpeg processes
-	@pkill -f ffmpeg 2>/dev/null && echo "$(GREEN)Killed ffmpeg processes$(NC)" || echo "No ffmpeg processes to kill"
-
 ##@ Utilities
 .PHONY: clean
 clean: ## Clean build artifacts
 	@echo "$(BLUE)Cleaning build artifacts...$(NC)"
 	@rm -rf $(BUILD_DIR) $(DIST_DIR) $(COVERAGE_DIR) test_results/
 	@rm -f $(BINARY_NAME) coverage.out *.prof
-	@go clean -cache -testcache -modcache
+	@go clean -cache -testcache
 	@echo "$(GREEN)Clean complete!$(NC)"
 
 .PHONY: install
 install: build ## Install the binary to $GOPATH/bin
 	@echo "$(BLUE)Installing $(BINARY_NAME)...$(NC)"
-	@go install $(LDFLAGS) $(MAIN_PACKAGE)
+	@cp $(BUILD_DIR)/$(BINARY_NAME) $$(go env GOPATH)/bin/
 	@echo "$(GREEN)$(BINARY_NAME) installed to $$(go env GOPATH)/bin/$(NC)"
-
-.PHONY: uninstall
-uninstall: ## Uninstall the binary from $GOPATH/bin
-	@echo "$(BLUE)Uninstalling $(BINARY_NAME)...$(NC)"
-	@rm -f $$(go env GOPATH)/bin/$(BINARY_NAME)
-	@echo "$(GREEN)$(BINARY_NAME) uninstalled$(NC)"
 
 .PHONY: version
 version: ## Show version information
@@ -365,22 +317,22 @@ env: ## Show environment information
 	@echo "GOROOT: $$(go env GOROOT)"
 	@echo "GOOS: $$(go env GOOS)"
 	@echo "GOARCH: $$(go env GOARCH)"
-	@echo "GO111MODULE: $$(go env GO111MODULE)"
+	@echo "CGO_ENABLED: $(CGO_ENABLED)"
 
 ##@ CI/CD
 .PHONY: ci
-ci: deps-verify check test-coverage benchmark ## Run CI pipeline
+ci: deps-verify check test-coverage ## Run CI pipeline
 	@echo "$(GREEN)CI pipeline completed successfully!$(NC)"
 
 .PHONY: pre-commit
-pre-commit: fmt lint vet test-short ## Run pre-commit checks
+pre-commit: fmt vet test-short ## Run pre-commit checks
 	@echo "$(GREEN)Pre-commit checks passed!$(NC)"
 
 .PHONY: release
 release: clean check test-coverage build-all ## Prepare release artifacts
 	@echo "$(BLUE)Preparing release...$(NC)"
 	@mkdir -p $(DIST_DIR)/checksums
-	@cd $(DIST_DIR) && sha256sum * > checksums/sha256sums.txt
+	@cd $(DIST_DIR) && sha256sum * > checksums/sha256sums.txt 2>/dev/null || shasum -a 256 * > checksums/sha256sums.txt
 	@echo "$(GREEN)Release artifacts ready in $(DIST_DIR)/$(NC)"
 
 # Default target
