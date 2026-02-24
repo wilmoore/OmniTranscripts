@@ -1,6 +1,10 @@
 package engine
 
-import "os"
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"os"
+)
 
 // Options configures the transcription engine behavior.
 type Options struct {
@@ -19,6 +23,11 @@ type Options struct {
 	// WhisperServerURL is the URL of a whisper.cpp HTTP server.
 	// Used as fallback if AssemblyAI is unavailable.
 	WhisperServerURL string
+
+	// CacheDownloads enables caching of downloaded audio files.
+	// When true, downloads are cached by URL hash and reused on subsequent runs.
+	// Useful for CLI usage to avoid re-downloading the same media.
+	CacheDownloads bool
 }
 
 // DefaultOptions returns Options populated from environment variables.
@@ -50,4 +59,11 @@ func (o Options) Validate() error {
 // backend is configured (native whisper, AssemblyAI, or whisper server).
 func (o Options) HasTranscriptionBackend() bool {
 	return o.WhisperModelPath != "" || o.AssemblyAIKey != "" || o.WhisperServerURL != ""
+}
+
+// URLCacheKey generates a cache key from a URL using SHA256.
+// The key is a 12-character hex string (first 6 bytes of the hash).
+func URLCacheKey(url string) string {
+	hash := sha256.Sum256([]byte(url))
+	return hex.EncodeToString(hash[:6])
 }

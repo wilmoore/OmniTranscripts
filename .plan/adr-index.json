@@ -14,8 +14,12 @@
       "adrs": ["0003-context-propagation-for-subprocess-management.md"]
     },
     {
-      "branch": "feat/mcp-server-chatgpt-integration",
-      "adrs": ["0004-async-first-mcp-server-integration.md"]
+      "branch": "refactor/add-cli-transcribe-target",
+      "adrs": ["0004-ytdlp-dependency-management.md"]
+    },
+    {
+      "branch": "fix/yt-dlp-youtube-shorts-403",
+      "adrs": ["0004-ytdlp-dependency-management.md"]
     }
   ]
 }

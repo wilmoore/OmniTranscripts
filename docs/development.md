@@ -74,6 +74,32 @@ make test-coverage # Generate coverage report
 make benchmark     # Run performance benchmarks
 ```
 
+### CLI Transcription
+
+For quick one-off transcriptions without starting the HTTP server, use the CLI tool:
+
+```bash
+# Transcribe a YouTube video
+make transcribe URL="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+
+# Transcribe an Instagram reel
+make transcribe URL="https://www.instagram.com/reel/ABC123/"
+
+# Transcribe any supported platform (1000+ via yt-dlp)
+make transcribe URL="https://vimeo.com/123456789"
+make transcribe URL="https://www.tiktok.com/@user/video/123"
+
+# Transcribe a local file
+make transcribe URL="/path/to/video.mp4"
+make transcribe URL="./recordings/meeting.wav"
+```
+
+The CLI tool directly uses the `engine/` package (ADR-0001: Dual Consumption Model), bypassing the HTTP layer entirely. This is useful for:
+- Quick testing during development
+- One-off transcriptions
+- Scripting and automation
+- Debugging the transcription pipeline
+
 ### Development Server Options
 
 #### Option 1: Standard Go Server (Fiber)

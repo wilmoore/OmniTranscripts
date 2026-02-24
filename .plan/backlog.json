@@ -1,6 +1,31 @@
 {
-  "lastSequence": 9,
+  "lastSequence": 11,
   "items": [
+    {
+      "id": 11,
+      "title": "Fix YouTube Shorts 403 Forbidden download error",
+      "description": "YouTube Shorts downloads fail with HTTP Error 403: Forbidden due to YouTube forcing SABR streaming protocol. go-ytdlp v1.2.7 bundles outdated yt-dlp that doesn't handle SABR. Fix: update go-ytdlp from v1.2.7 to v1.3.1 which bundles yt-dlp 2026.02.21 with improved YouTube support.",
+      "category": "bug",
+      "severity": "critical",
+      "fingerprint": "bug|11|yt-dlp-youtube-shorts-403",
+      "source": "/pro:bug",
+      "sourceBranch": "fix/yt-dlp-youtube-shorts-403",
+      "createdAt": "2026-02-22T12:00:00Z",
+      "status": "resolved",
+      "completedAt": "2026-02-23T00:00:00Z"
+    },
+    {
+      "id": 10,
+      "title": "Add CLI transcribe target to Makefile",
+      "description": "Add a `make transcribe URL=...` target for quick one-off transcriptions without starting the HTTP server. Extends existing examples/local-files/transcribe.go to handle any URL (YouTube, Instagram, local files) and adds Makefile integration.",
+      "category": "debt",
+      "severity": "medium",
+      "fingerprint": "debt|10|add-cli-transcribe-target",
+      "source": "/pro:refactor",
+      "sourceBranch": "refactor/add-cli-transcribe-target",
+      "createdAt": "2026-02-08T12:00:00Z",
+      "status": "in-progress"
+    },
     {
       "id": 9,
       "title": "MCP Server + ChatGPT Apps SDK Integration",
