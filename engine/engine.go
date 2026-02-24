@@ -5,10 +5,31 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/lrstanley/go-ytdlp"
 	ffmpeg_go "github.com/u2takey/ffmpeg-go"
+
+	"omnitranscripts/lib"
 )
+
+var (
+	ytdlpInstallOnce sync.Once
+	ytdlpInstallErr  error
+)
+
+// ensureYtdlp ensures the bundled yt-dlp binary is installed and cached.
+// This is called lazily on first use and cached for subsequent calls.
+// Using the bundled version ensures consistent behavior and access to
+// latest platform support (per ADR-0004: no system yt-dlp fallback).
+func ensureYtdlp(ctx context.Context) error {
+	ytdlpInstallOnce.Do(func() {
+		_, ytdlpInstallErr = ytdlp.Install(ctx, &ytdlp.InstallOptions{
+			DisableSystem: true, // Never use system yt-dlp (ADR-0004)
+		})
+	})
+	return ytdlpInstallErr
+}
 
 // Transcribe processes media from a URL and returns the transcription.
 // It uses yt-dlp to download audio from any supported URL, normalizes
@@ -31,22 +52,42 @@ func Transcribe(ctx context.Context, url string, jobID string, opts Options) (*R
 		return nil, NewError(StageDownload, "failed to create work directory", err)
 	}
 
-	audioFile := filepath.Join(opts.WorkDir, fmt.Sprintf("%s.wav", jobID))
-	normalizedAudio := filepath.Join(opts.WorkDir, fmt.Sprintf("%s_norm.wav", jobID))
-	transcriptFile := filepath.Join(opts.WorkDir, fmt.Sprintf("%s_transcript.txt", jobID))
-
-	defer func() {
-		os.Remove(audioFile)
-		os.Remove(normalizedAudio)
-		os.Remove(transcriptFile)
-	}()
-
-	if err := downloadAudio(ctx, url, audioFile); err != nil {
-		return nil, NewError(StageDownload, "failed to download audio", err)
+	// Use URL hash for cache key if caching is enabled, otherwise use jobID
+	filePrefix := jobID
+	if opts.CacheDownloads {
+		filePrefix = "cache_" + URLCacheKey(url)
 	}
 
-	if err := normalizeAudio(ctx, audioFile, normalizedAudio); err != nil {
-		return nil, NewError(StageNormalize, "failed to normalize audio", err)
+	audioFile := filepath.Join(opts.WorkDir, fmt.Sprintf("%s.wav", filePrefix))
+	normalizedAudio := filepath.Join(opts.WorkDir, fmt.Sprintf("%s_norm.wav", filePrefix))
+	transcriptFile := filepath.Join(opts.WorkDir, fmt.Sprintf("%s_transcript.txt", jobID))
+
+	// Cleanup: only remove non-cached files
+	defer func() {
+		os.Remove(transcriptFile)
+		if !opts.CacheDownloads {
+			os.Remove(audioFile)
+			os.Remove(normalizedAudio)
+		}
+	}()
+
+	// Check if cached audio exists
+	cacheHit := false
+	if opts.CacheDownloads {
+		if _, err := os.Stat(normalizedAudio); err == nil {
+			fmt.Printf("Using cached audio: %s\n", normalizedAudio)
+			cacheHit = true
+		}
+	}
+
+	if !cacheHit {
+		if err := downloadAudio(ctx, url, audioFile); err != nil {
+			return nil, NewError(StageDownload, "failed to download audio", err)
+		}
+
+		if err := normalizeAudio(ctx, audioFile, normalizedAudio); err != nil {
+			return nil, NewError(StageNormalize, "failed to normalize audio", err)
+		}
 	}
 
 	transcript, segments, err := transcribeAudio(normalizedAudio, transcriptFile, opts)
@@ -66,6 +107,11 @@ func Transcribe(ctx context.Context, url string, jobID string, opts Options) (*R
 // The context parameter controls subprocess lifecycle - when cancelled,
 // the yt-dlp process will be terminated.
 func GetMediaDuration(ctx context.Context, url string) (int, error) {
+	// Ensure bundled yt-dlp is installed (ADR-0004)
+	if err := ensureYtdlp(ctx); err != nil {
+		return 0, NewError(StageDownload, "failed to install yt-dlp", err)
+	}
+
 	dl := ytdlp.New()
 
 	result, err := dl.Run(ctx, url, "--get-duration", "--no-warnings")
@@ -81,6 +127,11 @@ func GetMediaDuration(ctx context.Context, url string) (int, error) {
 }
 
 func downloadAudio(ctx context.Context, url, outputPath string) error {
+	// Ensure bundled yt-dlp is installed (ADR-0004)
+	if err := ensureYtdlp(ctx); err != nil {
+		return fmt.Errorf("failed to install yt-dlp: %w", err)
+	}
+
 	dl := ytdlp.New().
 		ExtractAudio().
 		AudioFormat("wav").
@@ -106,8 +157,8 @@ func normalizeAudio(ctx context.Context, inputPath, outputPath string) error {
 			"ar":  16000,
 			"ac":  1,
 			"c:a": "pcm_s16le",
-			"y":   nil,
-		})
+		}).
+		GlobalArgs("-y") // Overwrite output file without asking
 
 	// Set the context on the stream to enable cancellation
 	stream.Context = ctx
@@ -161,9 +212,52 @@ func transcribeAudio(audioPath, outputPath string, opts Options) (string, []Segm
 }
 
 func transcribeWithNativeWhisper(audioPath, outputPath, modelPath string) (string, []Segment, error) {
-	// TODO: Integrate with native whisper.cpp bindings
-	// For now, return an error to trigger fallback
-	return "", nil, fmt.Errorf("native whisper integration pending")
+	// Check if whisper.cpp is available (CGO build)
+	if !lib.IsWhisperAvailable() {
+		return "", nil, fmt.Errorf("whisper.cpp requires CGO; build with CGO_ENABLED=1")
+	}
+
+	// Load audio samples from WAV file
+	samples, err := lib.LoadWAVAsFloat32(audioPath)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to load audio: %w", err)
+	}
+
+	// Initialize whisper context with model
+	whisperCtx, err := lib.InitWhisper(modelPath)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to initialize whisper: %w", err)
+	}
+	defer whisperCtx.Free()
+
+	// Transcribe audio
+	libSegments, err := whisperCtx.TranscribeAudio(samples)
+	if err != nil {
+		return "", nil, fmt.Errorf("transcription failed: %w", err)
+	}
+
+	// Convert lib.TranscriptSegment to engine.Segment
+	segments := make([]Segment, len(libSegments))
+	var fullTranscript string
+
+	for i, seg := range libSegments {
+		segments[i] = Segment{
+			Start: float64(seg.StartTime) / 1000.0, // Convert milliseconds to seconds
+			End:   float64(seg.EndTime) / 1000.0,
+			Text:  seg.Text,
+		}
+		if i > 0 {
+			fullTranscript += " "
+		}
+		fullTranscript += seg.Text
+	}
+
+	// Write transcript to output file
+	if err := os.WriteFile(outputPath, []byte(fullTranscript), 0644); err != nil {
+		return "", nil, fmt.Errorf("failed to write transcript: %w", err)
+	}
+
+	return fullTranscript, segments, nil
 }
 
 func transcribeWithAssemblyAI(audioPath, outputPath, apiKey string) (string, []Segment, error) {

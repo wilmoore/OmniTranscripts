@@ -79,8 +79,8 @@ func normalizeAudio(ctx context.Context, inputPath, outputPath string) error {
 			"ar":  16000,
 			"ac":  1,
 			"c:a": "pcm_s16le",
-			"y":   nil,
-		})
+		}).
+		GlobalArgs("-y") // Overwrite output file without asking
 
 	// Set the context on the stream to enable cancellation
 	stream.Context = ctx
