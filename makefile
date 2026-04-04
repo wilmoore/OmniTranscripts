@@ -29,6 +29,21 @@ YELLOW=\033[1;33m
 RED=\033[0;31m
 NC=\033[0m # No Color
 
+# Clipboard command (cross-platform)
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+    CLIP_CMD = pbcopy
+else
+    # Linux: prefer xclip, fallback to xsel
+    ifneq ($(shell which xclip 2>/dev/null),)
+        CLIP_CMD = xclip -selection clipboard
+    else ifneq ($(shell which xsel 2>/dev/null),)
+        CLIP_CMD = xsel --clipboard --input
+    else
+        CLIP_CMD = cat > /dev/null && echo "$(YELLOW)No clipboard tool found (install xclip or xsel)$(NC)"
+    endif
+endif
+
 .PHONY: help
 help: ## Show this help message
 	@echo "$(BLUE)OmniTranscripts - Available Commands$(NC)"
@@ -76,6 +91,21 @@ endif
 	@mkdir -p $(BUILD_DIR)
 	@CGO_ENABLED=1 go build -o $(BUILD_DIR)/transcribe examples/transcribe/main.go
 	@WHISPER_MODEL_PATH=models/ggml-base.en.bin $(BUILD_DIR)/transcribe "$(URL)"
+
+.PHONY: transcribe-clip
+transcribe-clip: ## Transcribe URL and copy transcript to clipboard
+ifndef URL
+	@echo "$(RED)Error: URL is required$(NC)"
+	@echo "Usage: make transcribe-clip URL=\"https://...\""
+	@exit 1
+endif
+	@mkdir -p $(BUILD_DIR)
+	@CGO_ENABLED=1 go build -o $(BUILD_DIR)/transcribe examples/transcribe/main.go 2>/dev/null
+	@WHISPER_MODEL_PATH=models/ggml-base.en.bin $(BUILD_DIR)/transcribe "$(URL)" 2>&1 | \
+		sed -n '/^--- Transcript ---$$/,/^--- Segments ---$$/p' | \
+		sed '1d;$$d' | \
+		$(CLIP_CMD)
+	@echo "$(GREEN)Transcript copied to clipboard$(NC)"
 
 ##@ Building
 .PHONY: build

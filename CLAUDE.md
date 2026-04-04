@@ -37,9 +37,10 @@ make build         # Build application
 make clean         # Clean all build artifacts
 
 # CLI transcription (no server needed)
-make transcribe URL="https://www.youtube.com/watch?v=..."     # Transcribe any URL
-make transcribe URL="https://www.instagram.com/reel/ABC123/" # Instagram, TikTok, etc.
-make transcribe URL="/path/to/video.mp4"                     # Local file
+make transcribe URL="https://www.youtube.com/watch?v=..."      # Transcribe any URL
+make transcribe URL="https://www.instagram.com/reel/ABC123/"  # Instagram, TikTok, etc.
+make transcribe URL="/path/to/video.mp4"                      # Local file
+make transcribe-clip URL="..."                                 # Transcript to clipboard
 
 # Testing & quality
 make test          # Run all tests including load tests
