@@ -1,6 +1,18 @@
 {
-  "lastSequence": 11,
+  "lastSequence": 12,
   "items": [
+    {
+      "id": 12,
+      "title": "Add clipboard-friendly Make targets for transcription output",
+      "description": "Add Make targets that pipe transcript output directly to clipboard (pbcopy on macOS, xclip on Linux). Current `make transcribe` produces verbose terminal output; users want clean transcript on clipboard. Add `make transcribe-clip` for transcript-only and document CLI pipeline patterns.",
+      "category": "chore",
+      "severity": "medium",
+      "fingerprint": "chore|12|add-clipboard-make-targets",
+      "source": "/pro:chore",
+      "sourceBranch": "chore/add-clipboard-make-targets",
+      "createdAt": "2026-03-30T12:00:00Z",
+      "status": "in-progress"
+    },
     {
       "id": 11,
       "title": "Fix YouTube Shorts 403 Forbidden download error",

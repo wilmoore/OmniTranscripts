@@ -100,6 +100,37 @@ The CLI tool directly uses the `engine/` package (ADR-0001: Dual Consumption Mod
 - Scripting and automation
 - Debugging the transcription pipeline
 
+#### Copy Transcript to Clipboard
+
+For quick access to transcripts without scrolling through terminal output:
+
+```bash
+# Transcribe and copy directly to clipboard (macOS/Linux)
+make transcribe-clip URL="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+# Output: "Transcript copied to clipboard"
+```
+
+#### CLI Pipeline Patterns
+
+For custom output handling, pipe the standard `transcribe` output:
+
+```bash
+# Extract just the transcript (between markers)
+make transcribe URL="..." 2>&1 | sed -n '/^--- Transcript ---$/,/^--- Segments ---$/p' | sed '1d;$d'
+
+# Copy transcript to clipboard manually (macOS)
+make transcribe URL="..." 2>&1 | sed -n '/^--- Transcript ---$/,/^--- Segments ---$/p' | sed '1d;$d' | pbcopy
+
+# Copy transcript to clipboard manually (Linux with xclip)
+make transcribe URL="..." 2>&1 | sed -n '/^--- Transcript ---$/,/^--- Segments ---$/p' | sed '1d;$d' | xclip -selection clipboard
+
+# Save transcript to file
+make transcribe URL="..." 2>&1 | sed -n '/^--- Transcript ---$/,/^--- Segments ---$/p' | sed '1d;$d' > transcript.txt
+
+# Extract timestamped segments
+make transcribe URL="..." 2>&1 | sed -n '/^--- Segments ---$/,/^--- Summary ---$/p' | sed '1d;$d'
+```
+
 ### Development Server Options
 
 #### Option 1: Standard Go Server (Fiber)
