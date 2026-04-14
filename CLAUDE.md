@@ -36,7 +36,9 @@ make test-short    # Run quick tests (skip load tests)
 make build         # Build application
 make clean         # Clean all build artifacts
 
-# CLI transcription (no server needed)
+# CLI media operations (no server needed)
+make download URL="https://music.youtube.com/watch?v=..."     # Download media to ~/Downloads
+make download URL="https://..." OUT=./video.mp4               # Download to custom path
 make transcribe URL="https://www.youtube.com/watch?v=..."     # Transcribe any URL
 make transcribe URL="https://www.instagram.com/reel/ABC123/" # Instagram, TikTok, etc.
 make transcribe URL="/path/to/video.mp4"                     # Local file

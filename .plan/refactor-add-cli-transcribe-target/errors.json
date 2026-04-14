@@ -1,0 +1,42 @@
+{
+  "attempts": [
+    {
+      "timestamp": "2026-02-09T02:22:19Z",
+      "tool": "Bash",
+      "error": "go build ./examples/transcribe/...",
+      "status": "unresolved"
+    },
+    {
+      "timestamp": "2026-02-09T02:47:00Z",
+      "tool": "Bash",
+      "error": "rm -f /tmp/omnitranscripts/cli-transcribe* && make transcribe URL=\"https://www.instagram.com/reel/DNYmwU6RJ2m/\" 2>&1",
+      "status": "unresolved"
+    },
+    {
+      "timestamp": "2026-02-09T02:47:21Z",
+      "tool": "Bash",
+      "error": "make transcribe URL=\"https://www.instagram.com/reel/DNYmwU6RJ2m/\" 2>&1",
+      "status": "unresolved"
+    },
+    {
+      "timestamp": "2026-02-09T02:48:16Z",
+      "tool": "Bash",
+      "error": "make transcribe URL=\"https://www.instagram.com/reel/DNYmwU6RJ2m/\" 2>&1",
+      "status": "unresolved"
+    },
+    {
+      "timestamp": "2026-02-11T02:23:44Z",
+      "tool": "Bash",
+      "error": "make transcribe URL=\"https://www.loom.com/share/2fdd8217b94d4cdca5429aea3a010625\" 2>&1",
+      "status": "unresolved"
+    },
+    {
+      "timestamp": "2026-02-11T02:25:10Z",
+      "tool": "Bash",
+      "error": "make transcribe URL=\"https://www.loom.com/share/2fdd8217b94d4cdca5429aea3a010625\" 2>&1",
+      "status": "unresolved"
+    }
+  ],
+  "strikeCount": 2,
+  "lastErrorHash": "d61420a2"
+}
