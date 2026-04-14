@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "sessions": [
+    {
+      "id": "session-2026-04-14T00-08-49-595Z-4e78988f",
+      "filename": "session-2026-04-14T00-08-49-595Z-4e78988f.md",
+      "relativePath": "sessions/session-2026-04-14T00-08-49-595Z-4e78988f.md",
+      "status": "pending",
+      "createdAt": "2026-04-14T00:08:49.595Z",
+      "updatedAt": "2026-04-14T00:08:49.595Z",
+      "trigger": "plugin.initialize",
+      "branch": "feat/add-download-make-target",
+      "workingTree": "dirty",
+      "recentCommit": "dd0444e Merge pull request #11 from wilmoore/fix/yt-dlp-youtube-shorts-403",
+      "backlogSummary": "- In-progress items: unknown (no readable backlog)"
+    }
+  ]
+}

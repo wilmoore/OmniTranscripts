@@ -60,6 +60,25 @@ run: ## Run the application
 	@CGO_ENABLED=$(CGO_ENABLED) go run .
 
 ##@ CLI
+.PHONY: download
+download: ## Download media from URL (make download URL="..." [OUT=path])
+ifndef URL
+	@echo "$(RED)Error: URL is required$(NC)"
+	@echo "Usage: make download URL=\"https://...\""
+	@echo ""
+	@echo "Options:"
+	@echo "  OUT=path    Override output location (default: ~/Downloads/)"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make download URL=\"https://music.youtube.com/watch?v=...\""
+	@echo "  make download URL=\"https://www.youtube.com/watch?v=...\" OUT=./video.mp4"
+	@exit 1
+endif
+	@echo "$(BLUE)Downloading: $(URL)$(NC)"
+	@mkdir -p $(BUILD_DIR)
+	@CGO_ENABLED=0 go build -o $(BUILD_DIR)/download examples/download/main.go
+	@$(BUILD_DIR)/download "$(URL)" "$(OUT)"
+
 .PHONY: transcribe
 transcribe: ## Transcribe a URL or file (make transcribe URL="https://...")
 ifndef URL
