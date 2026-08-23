@@ -1,5 +1,5 @@
 {
-  "lastSequence": 12,
+  "lastSequence": 14,
   "items": [
     {
       "id": 11,
@@ -158,6 +158,33 @@
       "createdAt": "2026-05-13T22:50:22Z",
       "status": "resolved",
       "resolvedAt": "2026-08-08T13:48:47Z"
+    },
+    {
+      "id": 13,
+      "title": "Investigate a smoother transcribe workflow for YouTube 403 failures",
+      "description": "Determine how the make transcribe CLI should avoid duplicate progress output, detect or recover from stale bundled yt-dlp failures, and present actionable diagnostics when YouTube SABR or HTTP 403 behavior prevents downloading.",
+      "category": "spike",
+      "severity": "medium",
+      "fingerprint": "spike|13|smooth-transcribe-youtube-403-workflow",
+      "source": "$pro:spike",
+      "sourceBranch": "spike/smooth-transcribe-youtube-403-workflow",
+      "createdAt": "2026-08-23T00:00:00Z",
+      "status": "completed",
+      "completedAt": "2026-08-23T00:00:00Z",
+      "completionEvidence": "Confirmed duplicate status ownership, reproduced the supplied URL failure with bundled yt-dlp 2026.02.21, verified the checksum-matched upstream 2026.08.19 binary succeeds, and verified go-ytdlp v1.3.6 installs pinned yt-dlp 2026.07.04 and succeeds without system fallback. Recommended promotion to a bounded implementation."
+    },
+    {
+      "id": 14,
+      "title": "Smooth transcribe diagnostics and refresh pinned yt-dlp",
+      "description": "Update go-ytdlp from v1.3.1 to v1.3.6, retain DisableSystem and version pinning under ADR 0004, remove the Makefile's duplicate Transcribing line so the CLI owns progress, classify stale/SABR/HTTP-403 download failures into one concise actionable diagnostic that identifies the bundled version and avoids suggesting yt-dlp -U, and add deterministic tests for output ownership and error classification. Add dependency-update automation or a documented recurring check so platform extractor drift is detected earlier.",
+      "category": "bug",
+      "severity": "high",
+      "fingerprint": "bug|14|smooth-transcribe-youtube-403-workflow",
+      "source": "$pro:spike",
+      "sourceBranch": "main",
+      "createdAt": "2026-08-23T00:00:00Z",
+      "status": "pending",
+      "blockedBy": [13]
     }
   ]
 }
