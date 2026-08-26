@@ -78,6 +78,10 @@ Do not add system fallback or automatic runtime self-update unless ADR 0004 is e
 
 ## Remaining Uncertainty
 
-- How quickly `go-ytdlp` will publish a wrapper release for upstream `2026.08.19`; v1.3.6 currently lags at `2026.07.04` but passes this URL.
+- How quickly `go-ytdlp` will publish a tagged wrapper release for upstream `2026.08.19`; v1.3.6 currently lags at `2026.07.04` and only passed the spike's partial `--test` probe.
 - Whether YouTube will later require PO tokens, cookies, or a JavaScript runtime for this or other videos; no single downloader upgrade can guarantee future platform behavior.
 - Which dependency automation cadence best balances extractor freshness against reproducible release verification.
+
+## Follow-up Correction
+
+The spike's `--test` probe only downloaded a small portion of the selected format. During implementation, the exact full extraction flags showed that pinned `yt-dlp 2026.07.04` still fails with HTTP 403, while `2026.08.19` completes the download and WAV extraction. The production fix therefore pins the exact `go-ytdlp` wrapper commit containing `2026.08.19`, not tagged v1.3.6.
