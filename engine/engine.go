@@ -15,6 +15,7 @@ import (
 
 var (
 	ytdlpInstallOnce sync.Once
+	ytdlpInstall     *ytdlp.ResolvedInstall
 	ytdlpInstallErr  error
 )
 
@@ -22,13 +23,13 @@ var (
 // This is called lazily on first use and cached for subsequent calls.
 // Using the bundled version ensures consistent behavior and access to
 // latest platform support (per ADR-0004: no system yt-dlp fallback).
-func ensureYtdlp(ctx context.Context) error {
+func ensureYtdlp(ctx context.Context) (*ytdlp.ResolvedInstall, error) {
 	ytdlpInstallOnce.Do(func() {
-		_, ytdlpInstallErr = ytdlp.Install(ctx, &ytdlp.InstallOptions{
+		ytdlpInstall, ytdlpInstallErr = ytdlp.Install(ctx, &ytdlp.InstallOptions{
 			DisableSystem: true, // Never use system yt-dlp (ADR-0004)
 		})
 	})
-	return ytdlpInstallErr
+	return ytdlpInstall, ytdlpInstallErr
 }
 
 // Transcribe processes media from a URL and returns the transcription.
@@ -108,15 +109,16 @@ func Transcribe(ctx context.Context, url string, jobID string, opts Options) (*R
 // the yt-dlp process will be terminated.
 func GetMediaDuration(ctx context.Context, url string) (int, error) {
 	// Ensure bundled yt-dlp is installed (ADR-0004)
-	if err := ensureYtdlp(ctx); err != nil {
+	install, err := ensureYtdlp(ctx)
+	if err != nil {
 		return 0, NewError(StageDownload, "failed to install yt-dlp", err)
 	}
 
-	dl := ytdlp.New()
+	dl := ytdlp.New().NoUpdate()
 
 	result, err := dl.Run(ctx, url, "--get-duration", "--no-warnings")
 	if err != nil {
-		return 0, NewError(StageDownload, "failed to get media info", err)
+		return 0, NewError(StageDownload, "failed to get media info", downloaderErrorFromResult(url, install.Version, result, err))
 	}
 
 	if result.ExitCode != 0 {
@@ -128,11 +130,13 @@ func GetMediaDuration(ctx context.Context, url string) (int, error) {
 
 func downloadAudio(ctx context.Context, url, outputPath string) error {
 	// Ensure bundled yt-dlp is installed (ADR-0004)
-	if err := ensureYtdlp(ctx); err != nil {
+	install, err := ensureYtdlp(ctx)
+	if err != nil {
 		return fmt.Errorf("failed to install yt-dlp: %w", err)
 	}
 
 	dl := ytdlp.New().
+		NoUpdate().
 		ExtractAudio().
 		AudioFormat("wav").
 		AudioQuality("0").
@@ -140,14 +144,27 @@ func downloadAudio(ctx context.Context, url, outputPath string) error {
 
 	result, err := dl.Run(ctx, url)
 	if err != nil {
-		return fmt.Errorf("yt-dlp failed: %w", err)
+		return downloaderErrorFromResult(url, install.Version, result, err)
 	}
 
 	if result.ExitCode != 0 {
-		return fmt.Errorf("yt-dlp failed with code %d: %s", result.ExitCode, result.Stderr)
+		return downloaderErrorFromResult(url, install.Version, result, nil)
 	}
 
 	return nil
+}
+
+func downloaderErrorFromResult(rawURL, version string, result *ytdlp.Result, err error) *DownloaderError {
+	exitCode := -1
+	details := ""
+	if result != nil {
+		exitCode = result.ExitCode
+		details = result.Stderr
+	}
+	if details == "" && err != nil {
+		details = err.Error()
+	}
+	return newDownloaderError(rawURL, version, exitCode, details, err)
 }
 
 func normalizeAudio(ctx context.Context, inputPath, outputPath string) error {
