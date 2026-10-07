@@ -91,7 +91,6 @@ ifndef URL
 	@echo "  make transcribe URL=\"/path/to/video.mp4\"" >&2
 	@exit 1
 endif
-	@echo "$(BLUE)Transcribing: $(URL)$(NC)" >&2
 	@mkdir -p $(BUILD_DIR)
 	@CGO_ENABLED=1 go build -o $(BUILD_DIR)/transcribe examples/transcribe/main.go
 	@WHISPER_MODEL_PATH=models/ggml-base.en.bin $(BUILD_DIR)/transcribe "$(URL)"

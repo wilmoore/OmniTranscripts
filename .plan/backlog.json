@@ -1,5 +1,5 @@
 {
-  "lastSequence": 12,
+  "lastSequence": 15,
   "items": [
     {
       "id": 11,
@@ -158,6 +158,50 @@
       "createdAt": "2026-05-13T22:50:22Z",
       "status": "resolved",
       "resolvedAt": "2026-08-08T13:48:47Z"
+    },
+    {
+      "id": 13,
+      "title": "Investigate a smoother transcribe workflow for YouTube 403 failures",
+      "description": "Determine how the make transcribe CLI should avoid duplicate progress output, detect or recover from stale bundled yt-dlp failures, and present actionable diagnostics when YouTube SABR or HTTP 403 behavior prevents downloading.",
+      "category": "spike",
+      "severity": "medium",
+      "fingerprint": "spike|13|smooth-transcribe-youtube-403-workflow",
+      "source": "$pro:spike",
+      "sourceBranch": "spike/smooth-transcribe-youtube-403-workflow",
+      "createdAt": "2026-08-23T00:00:00Z",
+      "status": "completed",
+      "completedAt": "2026-08-23T00:00:00Z",
+      "completionEvidence": "Confirmed duplicate status ownership, reproduced the supplied URL failure with bundled yt-dlp 2026.02.21, verified the checksum-matched upstream 2026.08.19 binary succeeds, and initially verified go-ytdlp v1.3.6 with yt-dlp 2026.07.04 using a partial --test download. Follow-up full-transfer verification found July still fails and corrected the implementation target to the wrapper commit pinning August."
+    },
+    {
+      "id": 14,
+      "title": "Smooth transcribe diagnostics and refresh pinned yt-dlp",
+      "description": "Update go-ytdlp from v1.3.1 to the exact wrapper commit pinning yt-dlp 2026.08.19, retain DisableSystem and version pinning under ADR 0004, remove the Makefile's duplicate Transcribing line so the CLI owns progress, classify stale/SABR/HTTP-403 download failures into one concise actionable diagnostic that identifies the bundled version and avoids suggesting yt-dlp -U, and add deterministic tests for output ownership and error classification. Add dependency-update automation so platform extractor drift is detected earlier.",
+      "category": "bug",
+      "severity": "high",
+      "fingerprint": "bug|14|smooth-transcribe-youtube-403-workflow",
+      "source": "$pro:spike",
+      "sourceBranch": "main",
+      "createdAt": "2026-08-23T00:00:00Z",
+      "status": "completed",
+      "completedAt": "2026-08-26T13:14:30Z",
+      "completionEvidence": "Pinned the wrapper commit containing yt-dlp 2026.08.19, retained DisableSystem, added typed compatibility failures and concise CLI diagnostics, removed duplicate Make progress, added weekly dependency monitoring, and completed both reported URLs end to end.",
+      "blockedBy": [13]
+    },
+    {
+      "id": 15,
+      "title": "Fix current YouTube transcribe 403 regression",
+      "description": "Implement the promoted downloader-refresh and CLI-diagnostics work after reproducing hYRdmo7M-ng with pinned yt-dlp 2026.02.21, finding 2026.07.04 still fails a full transfer, and verifying pinned 2026.08.19 succeeds. Preserve ADR 0004 pinning, remove duplicate progress output, and add typed, actionable compatibility errors with regression coverage.",
+      "category": "bug",
+      "severity": "high",
+      "fingerprint": "bug|15|youtube-transcribe-403-regression",
+      "source": "$pro:bug",
+      "sourceBranch": "fix/youtube-transcribe-403-workflow",
+      "createdAt": "2026-08-26T13:07:16Z",
+      "status": "completed",
+      "completedAt": "2026-08-26T13:14:30Z",
+      "completionEvidence": "Reproduced the old full-download failure, proved July still fails full transfer despite passing --test, verified August completes WAV extraction, and reran both original make transcribe workflows through successful native Whisper transcription.",
+      "blockedBy": [13]
     }
   ]
 }

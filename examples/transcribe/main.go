@@ -12,7 +12,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -20,13 +22,19 @@ import (
 	"omnitranscripts/engine"
 )
 
+type transcribeFunc func(context.Context, string, string, engine.Options) (*engine.Result, error)
+
 func main() {
-	if len(os.Args) < 2 {
-		printUsage()
-		os.Exit(1)
+	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr, engine.Transcribe))
+}
+
+func run(args []string, stdout, stderr io.Writer, transcribe transcribeFunc) int {
+	if len(args) < 1 {
+		printUsage(stderr)
+		return 1
 	}
 
-	input := os.Args[1]
+	input := args[0]
 
 	// Determine if input is a URL or local file
 	isURL := strings.HasPrefix(input, "http://") || strings.HasPrefix(input, "https://")
@@ -34,19 +42,19 @@ func main() {
 	if !isURL {
 		// Check if local file exists
 		if _, err := os.Stat(input); os.IsNotExist(err) {
-			fmt.Fprintf(os.Stderr, "Error: File not found: %s\n", input)
-			os.Exit(1)
+			fmt.Fprintf(stderr, "Error: File not found: %s\n", input)
+			return 1
 		}
 	}
 
 	// Print progress to stderr (not part of transcript output)
-	fmt.Fprintf(os.Stderr, "Transcribing: %s\n", input)
+	fmt.Fprintf(stderr, "Transcribing: %s\n", input)
 	if isURL {
-		fmt.Fprintf(os.Stderr, "Type: URL (downloading via yt-dlp)\n")
+		fmt.Fprintln(stderr, "Type: URL (downloading via yt-dlp)")
 	} else {
-		fmt.Fprintf(os.Stderr, "Type: Local file\n")
+		fmt.Fprintln(stderr, "Type: Local file")
 	}
-	fmt.Fprintf(os.Stderr, "\n")
+	fmt.Fprintln(stderr)
 
 	// Create a context with timeout for the transcription
 	// ADR-0003: Context propagation with appropriate timeouts
@@ -60,44 +68,60 @@ func main() {
 	// Local files go through: FFmpeg normalize -> Whisper transcribe
 	opts := engine.DefaultOptions()
 	opts.CacheDownloads = true // Cache downloads for CLI usage
-	result, err := engine.Transcribe(ctx, input, "cli-transcribe", opts)
+	result, err := transcribe(ctx, input, "cli-transcribe", opts)
 	if err != nil {
-		// Provide stage-specific error context to stderr
-		if tErr, ok := err.(*engine.TranscriptionError); ok {
-			fmt.Fprintf(os.Stderr, "Transcription failed at stage '%s': %s\n", tErr.Stage, tErr.Message)
-			if tErr.Err != nil {
-				fmt.Fprintf(os.Stderr, "  Cause: %v\n", tErr.Err)
-			}
-		} else {
-			fmt.Fprintf(os.Stderr, "Transcription failed: %v\n", err)
-		}
-		os.Exit(1)
+		writeTranscriptionError(stderr, err)
+		return 1
 	}
 
 	elapsed := time.Since(startTime)
 
 	// Output ONLY transcript to stdout (clean for piping)
-	fmt.Fprint(os.Stdout, result.Transcript)
+	fmt.Fprint(stdout, result.Transcript)
 
 	// Print diagnostic information to stderr
-	fmt.Fprintf(os.Stderr, "\n--- Summary ---\n")
-	fmt.Fprintf(os.Stderr, "Duration: %s\n", elapsed.Round(time.Second))
-	fmt.Fprintf(os.Stderr, "Segments: %d\n", len(result.Segments))
+	fmt.Fprintln(stderr, "\n--- Summary ---")
+	fmt.Fprintf(stderr, "Duration: %s\n", elapsed.Round(time.Second))
+	fmt.Fprintf(stderr, "Segments: %d\n", len(result.Segments))
+	return 0
 }
 
-func printUsage() {
-	fmt.Fprintf(os.Stderr, "Usage: go run main.go <url_or_file_path>\n")
-	fmt.Fprintf(os.Stderr, "\n")
-	fmt.Fprintf(os.Stderr, "Examples:\n")
-	fmt.Fprintf(os.Stderr, "  # Transcribe a YouTube video\n")
-	fmt.Fprintf(os.Stderr, "  go run main.go https://www.youtube.com/watch?v=dQw4w9WgXcQ\n")
-	fmt.Fprintf(os.Stderr, "\n")
-	fmt.Fprintf(os.Stderr, "  # Transcribe an Instagram reel\n")
-	fmt.Fprintf(os.Stderr, "  go run main.go https://www.instagram.com/reel/ABC123/\n")
-	fmt.Fprintf(os.Stderr, "\n")
-	fmt.Fprintf(os.Stderr, "  # Transcribe a local file\n")
-	fmt.Fprintf(os.Stderr, "  go run main.go /path/to/video.mp4\n")
-	fmt.Fprintf(os.Stderr, "\n")
-	fmt.Fprintf(os.Stderr, "Or use the Makefile:\n")
-	fmt.Fprintf(os.Stderr, "  make transcribe URL=\"https://youtube.com/watch?v=...\"\n")
+func writeTranscriptionError(stderr io.Writer, err error) {
+	var tErr *engine.TranscriptionError
+	if !errors.As(err, &tErr) {
+		fmt.Fprintf(stderr, "Transcription failed: %v\n", err)
+		return
+	}
+
+	fmt.Fprintf(stderr, "Transcription failed at stage '%s': %s\n", tErr.Stage, tErr.Message)
+
+	var downloaderErr *engine.DownloaderError
+	if errors.As(err, &downloaderErr) && downloaderErr.IsCompatibilityFailure() {
+		fmt.Fprintf(stderr, "YouTube download compatibility failure (bundled yt-dlp %s).\n", downloaderErr.Version)
+		fmt.Fprintln(stderr, "Update OmniTranscripts to refresh its pinned downloader, or retry later.")
+		if downloaderErr.Details != "" {
+			fmt.Fprintln(stderr, "Details:")
+			for _, line := range strings.Split(downloaderErr.Details, "\n") {
+				fmt.Fprintf(stderr, "  %s\n", line)
+			}
+		}
+		return
+	}
+
+	if tErr.Err != nil {
+		fmt.Fprintf(stderr, "  Cause: %v\n", tErr.Err)
+	}
+}
+
+func printUsage(stderr io.Writer) {
+	fmt.Fprintln(stderr, "Usage: go run main.go <url_or_file_path>")
+	fmt.Fprintln(stderr, "\nExamples:")
+	fmt.Fprintln(stderr, "  # Transcribe a YouTube video")
+	fmt.Fprintln(stderr, "  go run main.go https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+	fmt.Fprintln(stderr, "\n  # Transcribe an Instagram reel")
+	fmt.Fprintln(stderr, "  go run main.go https://www.instagram.com/reel/ABC123/")
+	fmt.Fprintln(stderr, "\n  # Transcribe a local file")
+	fmt.Fprintln(stderr, "  go run main.go /path/to/video.mp4")
+	fmt.Fprintln(stderr, "\nOr use the Makefile:")
+	fmt.Fprintln(stderr, "  make transcribe URL=\"https://youtube.com/watch?v=...\"")
 }
