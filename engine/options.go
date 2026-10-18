@@ -28,6 +28,10 @@ type Options struct {
 	// When true, downloads are cached by URL hash and reused on subsequent runs.
 	// Useful for CLI usage to avoid re-downloading the same media.
 	CacheDownloads bool
+
+	// Verbose enables progress and low-level backend diagnostics on stderr.
+	// It is disabled by default so callers receive no unsolicited output.
+	Verbose bool
 }
 
 // DefaultOptions returns Options populated from environment variables.

@@ -11,30 +11,54 @@ package lib
 #cgo darwin LDFLAGS: -framework Accelerate -framework Metal -framework Foundation -framework CoreGraphics
 #include <whisper.h>
 #include <stdlib.h>
+
+static void whisper_log_disable(enum ggml_log_level level, const char * text, void * user_data) {
+    (void) level;
+    (void) text;
+    (void) user_data;
+}
+
+static void set_whisper_logging(bool enabled) {
+    if (enabled) {
+        whisper_log_set(NULL, NULL);
+    } else {
+        whisper_log_set(whisper_log_disable, NULL);
+    }
+}
 */
 import "C"
 
 import (
 	"fmt"
+	"sync"
 	"unsafe"
 )
 
+var whisperLogMu sync.Mutex
+
 // WhisperContext wraps the C whisper context
 type WhisperContext struct {
-	ctx *C.struct_whisper_context
+	ctx       *C.struct_whisper_context
+	logMuHeld bool
 }
 
 // InitWhisper initializes whisper with a model file
-func InitWhisper(modelPath string) (*WhisperContext, error) {
+func InitWhisper(modelPath string, verbose ...bool) (*WhisperContext, error) {
+	whisperLogMu.Lock()
+	loggingEnabled := len(verbose) > 0 && verbose[0]
+	C.set_whisper_logging(C.bool(loggingEnabled))
+
 	cPath := C.CString(modelPath)
 	defer C.free(unsafe.Pointer(cPath))
 
 	ctx := C.whisper_init_from_file_with_params(cPath, C.whisper_context_default_params())
 	if ctx == nil {
+		C.set_whisper_logging(C.bool(true))
+		whisperLogMu.Unlock()
 		return nil, fmt.Errorf("failed to initialize whisper with model: %s", modelPath)
 	}
 
-	return &WhisperContext{ctx: ctx}, nil
+	return &WhisperContext{ctx: ctx, logMuHeld: true}, nil
 }
 
 // Free releases the whisper context
@@ -42,6 +66,11 @@ func (w *WhisperContext) Free() {
 	if w.ctx != nil {
 		C.whisper_free(w.ctx)
 		w.ctx = nil
+	}
+	if w.logMuHeld {
+		C.set_whisper_logging(C.bool(true))
+		w.logMuHeld = false
+		whisperLogMu.Unlock()
 	}
 }
 

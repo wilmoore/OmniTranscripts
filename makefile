@@ -79,8 +79,13 @@ endif
 	@CGO_ENABLED=0 go build -o $(BUILD_DIR)/download examples/download/main.go
 	@$(BUILD_DIR)/download "$(URL)" "$(OUT)"
 
+.PHONY: build-transcribe
+build-transcribe: ## Build the standalone transcribe CLI
+	@mkdir -p $(BUILD_DIR)
+	@CGO_ENABLED=1 go build -o $(BUILD_DIR)/transcribe examples/transcribe/main.go
+
 .PHONY: transcribe
-transcribe: ## Transcribe a URL or file (make transcribe URL="https://...")
+transcribe: build-transcribe ## Convenience wrapper for the transcribe CLI ([VERBOSE=1])
 ifndef URL
 	@echo "$(RED)Error: URL is required$(NC)" >&2
 	@echo "Usage: make transcribe URL=\"https://youtube.com/watch?v=...\"" >&2
@@ -89,11 +94,11 @@ ifndef URL
 	@echo "  make transcribe URL=\"https://www.youtube.com/watch?v=dQw4w9WgXcQ\"" >&2
 	@echo "  make transcribe URL=\"https://www.instagram.com/reel/ABC123/\"" >&2
 	@echo "  make transcribe URL=\"/path/to/video.mp4\"" >&2
+	@echo "  make transcribe URL=\"https://...\" VERBOSE=1" >&2
+	@echo "  make transcribe URL=\"https://...\" | pbcopy" >&2
 	@exit 1
 endif
-	@mkdir -p $(BUILD_DIR)
-	@CGO_ENABLED=1 go build -o $(BUILD_DIR)/transcribe examples/transcribe/main.go
-	@WHISPER_MODEL_PATH=models/ggml-base.en.bin $(BUILD_DIR)/transcribe "$(URL)"
+	@$(BUILD_DIR)/transcribe $(if $(filter 1 true yes,$(VERBOSE)),--verbose) "$(URL)"
 
 ##@ Building
 .PHONY: build

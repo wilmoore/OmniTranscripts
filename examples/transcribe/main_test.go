@@ -10,9 +10,12 @@ import (
 	"omnitranscripts/engine"
 )
 
-func TestRunWritesOneProgressMessageAndCleanTranscript(t *testing.T) {
+func TestRunIsQuietByDefault(t *testing.T) {
 	var stdout, stderr bytes.Buffer
-	transcribe := func(context.Context, string, string, engine.Options) (*engine.Result, error) {
+	transcribe := func(_ context.Context, _ string, _ string, opts engine.Options) (*engine.Result, error) {
+		if opts.Verbose {
+			t.Fatal("default run enabled verbose engine diagnostics")
+		}
 		return &engine.Result{Transcript: "hello world", Segments: []engine.Segment{{}}}, nil
 	}
 
@@ -23,8 +26,49 @@ func TestRunWritesOneProgressMessageAndCleanTranscript(t *testing.T) {
 	if stdout.String() != "hello world" {
 		t.Fatalf("stdout = %q", stdout.String())
 	}
-	if count := strings.Count(stderr.String(), "Transcribing:"); count != 1 {
-		t.Fatalf("progress count = %d; stderr = %q", count, stderr.String())
+	if stderr.Len() != 0 {
+		t.Fatalf("stderr = %q", stderr.String())
+	}
+}
+
+func TestRunVerboseWritesDiagnosticsAndKeepsStdoutClean(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	transcribe := func(_ context.Context, _ string, _ string, opts engine.Options) (*engine.Result, error) {
+		if !opts.Verbose {
+			t.Fatal("verbose run did not enable engine diagnostics")
+		}
+		return &engine.Result{Transcript: "hello world", Segments: []engine.Segment{{}}}, nil
+	}
+
+	code := run([]string{"--verbose", "https://youtube.com/watch?v=abcdefghijk"}, &stdout, &stderr, transcribe)
+	if code != 0 {
+		t.Fatalf("run() code = %d", code)
+	}
+	if stdout.String() != "hello world" {
+		t.Fatalf("stdout = %q", stdout.String())
+	}
+	for _, want := range []string{"Transcribing:", "Type: URL", "--- Summary ---", "Segments: 1"} {
+		if !strings.Contains(stderr.String(), want) {
+			t.Fatalf("stderr lacks %q: %q", want, stderr.String())
+		}
+	}
+}
+
+func TestRunHelpDocumentsStandaloneCLI(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	transcribe := func(context.Context, string, string, engine.Options) (*engine.Result, error) {
+		t.Fatal("help should not start transcription")
+		return nil, nil
+	}
+
+	code := run([]string{"--help"}, &stdout, &stderr, transcribe)
+	if code != 0 {
+		t.Fatalf("run() code = %d", code)
+	}
+	for _, want := range []string{"Usage: build/transcribe", "--verbose", "make build-transcribe"} {
+		if !strings.Contains(stderr.String(), want) {
+			t.Fatalf("help lacks %q: %q", want, stderr.String())
+		}
 	}
 }
 
@@ -49,8 +93,6 @@ func TestRunExplainsYouTubeCompatibilityFailure(t *testing.T) {
 		"YouTube download compatibility failure",
 		"bundled yt-dlp 2026.07.04",
 		"Update OmniTranscripts",
-		"Details:",
-		"HTTP Error 403: Forbidden",
 	} {
 		if !strings.Contains(stderr.String(), want) {
 			t.Fatalf("stderr lacks %q: %q", want, stderr.String())
@@ -62,6 +104,31 @@ func TestRunExplainsYouTubeCompatibilityFailure(t *testing.T) {
 	if stdout.Len() != 0 {
 		t.Fatalf("stdout = %q", stdout.String())
 	}
+	if strings.Contains(stderr.String(), "HTTP Error 403") {
+		t.Fatalf("default stderr contains raw diagnostics: %q", stderr.String())
+	}
+}
+
+func TestRunVerboseIncludesCompatibilityFailureDetails(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	downloadErr := &engine.DownloaderError{
+		Version: "2026.07.04",
+		Details: "ERROR: HTTP Error 403: Forbidden",
+		Kind:    engine.DownloadFailureCompatibility,
+	}
+	transcribe := func(context.Context, string, string, engine.Options) (*engine.Result, error) {
+		return nil, engine.NewError(engine.StageDownload, "failed to download audio", downloadErr)
+	}
+
+	code := run([]string{"-v", "https://youtube.com/watch?v=abcdefghijk"}, &stdout, &stderr, transcribe)
+	if code != 1 {
+		t.Fatalf("run() code = %d", code)
+	}
+	for _, want := range []string{"Details:", "HTTP Error 403: Forbidden"} {
+		if !strings.Contains(stderr.String(), want) {
+			t.Fatalf("stderr lacks %q: %q", want, stderr.String())
+		}
+	}
 }
 
 func TestRunPreservesGenericStageError(t *testing.T) {
@@ -71,6 +138,24 @@ func TestRunPreservesGenericStageError(t *testing.T) {
 	}
 
 	code := run([]string{"https://example.com/media"}, &stdout, &stderr, transcribe)
+	if code != 1 {
+		t.Fatalf("run() code = %d", code)
+	}
+	if strings.Contains(stderr.String(), "Cause: ffmpeg failed") {
+		t.Fatalf("default stderr contains raw cause: %q", stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "failed to normalize audio") {
+		t.Fatalf("stderr = %q", stderr.String())
+	}
+}
+
+func TestRunVerbosePreservesGenericStageErrorCause(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	transcribe := func(context.Context, string, string, engine.Options) (*engine.Result, error) {
+		return nil, engine.NewError(engine.StageNormalize, "failed to normalize audio", errors.New("ffmpeg failed"))
+	}
+
+	code := run([]string{"--verbose", "https://example.com/media"}, &stdout, &stderr, transcribe)
 	if code != 1 {
 		t.Fatalf("run() code = %d", code)
 	}
