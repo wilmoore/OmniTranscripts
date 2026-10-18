@@ -11,7 +11,8 @@
       "source": "/pro:feature",
       "sourceBranch": "feat/clean-transcribe-output",
       "createdAt": "2026-10-07T14:54:50Z",
-      "status": "completed",
+      "status": "resolved",
+      "resolvedAt": "2026-10-18T03:42:12Z",
       "completedAt": "2026-10-07T15:08:00Z",
       "completionEvidence": "Added quiet-by-default CLI and engine output, GNU-style --verbose/-v diagnostics, a documented make build-transcribe target, executable-relative model discovery for direct CLI use, a retained VERBOSE=1 Make convenience wrapper, synchronized native Whisper and ffmpeg logging controls, concise default failures, updated usage documentation and ADR 0006, regression tests, all non-handler Go package tests and full vet passes, CGO build verification, and cached native smoke tests proving zero stderr bytes in quiet mode."
     },
