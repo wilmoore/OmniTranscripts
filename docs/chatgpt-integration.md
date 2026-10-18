@@ -174,6 +174,7 @@ Estimated processing times based on media duration:
 OmniTranscripts supports 1000+ platforms via yt-dlp, including:
 
 - YouTube
+- Loom (public share links)
 - Vimeo
 - SoundCloud
 - Spotify (podcasts)

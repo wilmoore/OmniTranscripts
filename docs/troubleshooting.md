@@ -10,7 +10,7 @@ This guide covers common issues and solutions when developing, deploying, or usi
 
 - **Local audio/video files** - Upload `.mp3`, `.mp4`, `.wav`, and more directly via file upload
 - **Direct media URLs** - Any publicly accessible audio/video URL
-- **1000+ streaming platforms** - YouTube, Vimeo, SoundCloud, Twitter/X, TikTok, and many more via yt-dlp
+- **1000+ streaming platforms** - YouTube, Loom public shares, Vimeo, SoundCloud, Twitter/X, TikTok, and many more via yt-dlp
 
 **File Upload Example:**
 ```bash

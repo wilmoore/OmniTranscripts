@@ -254,6 +254,7 @@ Any publicly accessible audio or video URL:
 ### Streaming Platforms (via yt-dlp)
 1000+ platforms supported including:
 - YouTube (videos, Shorts, live streams after they end)
+- Loom (public share links)
 - Vimeo
 - SoundCloud
 - Twitter/X
@@ -431,6 +432,9 @@ The standalone `build/transcribe` CLI transcribes media without starting the HTT
 # Build once, then transcribe a URL
 make build-transcribe
 build/transcribe "https://www.youtube.com/watch?v=VIDEO_ID"
+
+# Transcribe a public Loom share
+build/transcribe "https://www.loom.com/share/VIDEO_ID"
 
 # Transcribe a local file
 build/transcribe "/path/to/video.mp4"

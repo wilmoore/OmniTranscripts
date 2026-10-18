@@ -87,6 +87,9 @@ build/transcribe "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 # Transcribe an Instagram reel
 build/transcribe "https://www.instagram.com/reel/ABC123/"
 
+# Transcribe a public Loom share
+build/transcribe "https://www.loom.com/share/VIDEO_ID"
+
 # Transcribe any supported platform (1000+ via yt-dlp)
 build/transcribe "https://vimeo.com/123456789"
 build/transcribe "https://www.tiktok.com/@user/video/123"
