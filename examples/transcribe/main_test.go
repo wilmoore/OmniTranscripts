@@ -54,6 +54,28 @@ func TestRunVerboseWritesDiagnosticsAndKeepsStdoutClean(t *testing.T) {
 	}
 }
 
+func TestRunPassesLoomShareURLToEngineUnchanged(t *testing.T) {
+	const loomURL = "https://www.loom.com/share/4347ba627d6a483db2e55927d1ecb2bc"
+	var stdout, stderr bytes.Buffer
+	transcribe := func(_ context.Context, input, _ string, _ engine.Options) (*engine.Result, error) {
+		if input != loomURL {
+			t.Fatalf("input = %q, want %q", input, loomURL)
+		}
+		return &engine.Result{Transcript: "loom transcript"}, nil
+	}
+
+	code := run([]string{loomURL}, &stdout, &stderr, transcribe)
+	if code != 0 {
+		t.Fatalf("run() code = %d", code)
+	}
+	if stdout.String() != "loom transcript" {
+		t.Fatalf("stdout = %q", stdout.String())
+	}
+	if stderr.Len() != 0 {
+		t.Fatalf("stderr = %q", stderr.String())
+	}
+}
+
 func TestRunHelpDocumentsStandaloneCLI(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	transcribe := func(context.Context, string, string, engine.Options) (*engine.Result, error) {
@@ -65,7 +87,7 @@ func TestRunHelpDocumentsStandaloneCLI(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("run() code = %d", code)
 	}
-	for _, want := range []string{"Usage: build/transcribe", "--verbose", "make build-transcribe"} {
+	for _, want := range []string{"Usage: build/transcribe", "--verbose", "loom.com/share/VIDEO_ID", "make build-transcribe"} {
 		if !strings.Contains(stderr.String(), want) {
 			t.Fatalf("help lacks %q: %q", want, stderr.String())
 		}
