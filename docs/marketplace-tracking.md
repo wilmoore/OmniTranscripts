@@ -46,13 +46,13 @@ Track the status of OmniTranscripts listings across API marketplaces.
 **Title**: OmniTranscripts - Universal Media Transcription API
 
 **Short Description**:
-Transcribe audio and video from 1000+ platforms including YouTube, Vimeo, TikTok, SoundCloud, and more. Get accurate transcripts with timestamps in seconds.
+Transcribe audio and video from 1000+ platforms including YouTube, Loom, Vimeo, TikTok, SoundCloud, and more. Get accurate transcripts with timestamps in seconds.
 
 **Long Description**:
 OmniTranscripts is a powerful transcription API that converts audio and video from any URL into accurate text transcripts with precise timestamps.
 
 **Key Features:**
-- **Universal Platform Support**: Works with YouTube, Vimeo, TikTok, Twitter, SoundCloud, Instagram, and 1000+ more platforms via yt-dlp
+- **Universal Platform Support**: Works with YouTube, Loom, Vimeo, TikTok, Twitter, SoundCloud, Instagram, and 1000+ more platforms via yt-dlp
 - **Audio-First Design**: Direct audio file URLs are first-class citizens
 - **Timestamp Precision**: Get word-level timestamps for subtitles
 - **Multiple Output Formats**: JSON, SRT, VTT subtitle formats

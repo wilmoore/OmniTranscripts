@@ -43,7 +43,7 @@ func ensureYtdlp(ctx context.Context) (*ytdlp.ResolvedInstall, error) {
 // It uses yt-dlp to download audio from any supported URL, normalizes
 // the audio with ffmpeg, and transcribes using the configured backend.
 //
-// The URL can be any URL supported by yt-dlp (YouTube, Vimeo, SoundCloud,
+// The URL can be any URL supported by yt-dlp (YouTube, Loom, Vimeo, SoundCloud,
 // direct audio/video URLs, and 1000+ other platforms).
 //
 // The context parameter controls subprocess lifecycle - when cancelled,

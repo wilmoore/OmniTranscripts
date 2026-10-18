@@ -138,6 +138,9 @@ Build the standalone CLI once, then invoke it directly with standard command-lin
 ```bash
 make build-transcribe
 
+# Transcribe a public Loom share
+build/transcribe "https://www.loom.com/share/VIDEO_ID"
+
 # Copy transcript to clipboard (macOS)
 build/transcribe "https://www.youtube.com/watch?v=..." | pbcopy
 
@@ -174,7 +177,7 @@ result, err := engine.Transcribe(
     engine.DefaultOptions(),
 )
 
-// URL (YouTube, Vimeo, SoundCloud, direct media URLs, etc.)
+// URL (YouTube, Loom, Vimeo, SoundCloud, direct media URLs, etc.)
 result, err := engine.Transcribe(
     "https://example.com/audio.mp3",
     "job-url-002",

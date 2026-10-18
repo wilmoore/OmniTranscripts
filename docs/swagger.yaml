@@ -5,7 +5,7 @@ info:
     Universal Media Transcription Engine - Transcribe audio and video from 1000+ platforms.
 
     **Key Features:**
-    - **Universal Platform Support**: YouTube, Vimeo, TikTok, Twitter, SoundCloud, Instagram, and 1000+ more via yt-dlp
+    - **Universal Platform Support**: YouTube, Loom, Vimeo, TikTok, Twitter, SoundCloud, Instagram, and 1000+ more via yt-dlp
     - **Audio-First Design**: Direct audio file URLs are first-class citizens
     - **Timestamp Precision**: Get word-level timestamps for subtitles
     - **Async Processing**: Long videos process in background with job status polling
@@ -62,7 +62,7 @@ paths:
     post:
       summary: Transcribe media from any URL
       description: |
-        Submit a media URL for transcription. Supports 1000+ platforms including YouTube, Vimeo, TikTok, Twitter, SoundCloud, and direct audio file URLs.
+        Submit a media URL for transcription. Supports 1000+ platforms including YouTube, Loom public shares, Vimeo, TikTok, Twitter, SoundCloud, and direct audio file URLs.
 
         **Processing:**
         - Videos ≤2 minutes: Processed synchronously, returns transcript immediately
@@ -86,7 +86,7 @@ paths:
                 url:
                   type: string
                   format: uri
-                  description: Media URL to transcribe (YouTube, Vimeo, TikTok, direct audio files, etc.)
+                  description: Media URL to transcribe (YouTube, Loom public shares, Vimeo, TikTok, direct audio files, etc.)
                   example: https://www.youtube.com/watch?v=dQw4w9WgXcQ
             examples:
               youtube:
@@ -97,6 +97,10 @@ paths:
                 summary: Vimeo video
                 value:
                   url: "https://vimeo.com/123456789"
+              loom:
+                summary: Public Loom share
+                value:
+                  url: "https://www.loom.com/share/4347ba627d6a483db2e55927d1ecb2bc"
               directAudio:
                 summary: Direct audio file
                 value:

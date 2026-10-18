@@ -1,6 +1,20 @@
 {
-  "lastSequence": 17,
+  "lastSequence": 18,
   "items": [
+    {
+      "id": 18,
+      "title": "Add documented Loom video support",
+      "description": "Make public Loom share URLs an explicitly supported transcription source across the standalone CLI, Make convenience wrapper, and user documentation. Preserve the ADR 0004 pinned yt-dlp strategy, add deterministic regression coverage that Loom share URLs use the URL pipeline unchanged, and verify the supplied public Loom fixture end to end.",
+      "category": "feature",
+      "severity": "medium",
+      "fingerprint": "feature|18|loom-video-support",
+      "source": "/pro:feature",
+      "sourceBranch": "feat/loom-video-support",
+      "createdAt": "2026-10-18T03:42:56Z",
+      "status": "completed",
+      "completedAt": "2026-10-18T03:45:02Z",
+      "completionEvidence": "Verified the supplied public Loom share end to end with the pinned bundled downloader and native Whisper, producing 4,135 transcript bytes and 63 segments. Added deterministic CLI routing and help coverage, named Loom across user/API/OpenAPI documentation, validated quiet mode with zero stderr bytes, validated Swagger YAML, and passed all non-handler package tests plus full vet."
+    },
     {
       "id": 16,
       "title": "Add quiet-by-default transcribe output",

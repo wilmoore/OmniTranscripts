@@ -1,7 +1,7 @@
 // CLI tool for transcribing any URL or local file using OmniTranscripts
 //
 // Supports:
-//   - YouTube, Instagram, TikTok, Vimeo, and 1000+ platforms via yt-dlp
+//   - YouTube, Loom, Instagram, TikTok, Vimeo, and 1000+ platforms via yt-dlp
 //   - Local audio/video files (mp4, mp3, wav, etc.)
 //
 // Usage:
@@ -155,6 +155,8 @@ func printUsage(stderr io.Writer) {
 	fmt.Fprintln(stderr, "  build/transcribe https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 	fmt.Fprintln(stderr, "\n  # Transcribe an Instagram reel")
 	fmt.Fprintln(stderr, "  build/transcribe https://www.instagram.com/reel/ABC123/")
+	fmt.Fprintln(stderr, "\n  # Transcribe a public Loom share")
+	fmt.Fprintln(stderr, "  build/transcribe https://www.loom.com/share/VIDEO_ID")
 	fmt.Fprintln(stderr, "\n  # Transcribe a local file")
 	fmt.Fprintln(stderr, "  build/transcribe /path/to/video.mp4")
 	fmt.Fprintln(stderr, "\nBuild with: make build-transcribe")
