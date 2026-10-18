@@ -37,11 +37,11 @@ make build         # Build application
 make clean         # Clean all build artifacts
 
 # CLI media operations (no server needed)
+make build-transcribe                                           # Build standalone CLI
+build/transcribe --verbose "https://www.youtube.com/watch?v=..." # Invoke CLI directly
 make download URL="https://music.youtube.com/watch?v=..."     # Download media to ~/Downloads
 make download URL="https://..." OUT=./video.mp4               # Download to custom path
-make transcribe URL="https://www.youtube.com/watch?v=..."     # Transcribe any URL
-make transcribe URL="https://www.instagram.com/reel/ABC123/" # Instagram, TikTok, etc.
-make transcribe URL="/path/to/video.mp4"                     # Local file
+make transcribe URL="https://www.youtube.com/watch?v=..."     # Make convenience wrapper
 
 # Testing & quality
 make test          # Run all tests including load tests
@@ -61,47 +61,47 @@ go test -v -run TestPostTranscribe_ValidationErrors ./handlers
 
 ## CLI Output and Piping
 
-The `make transcribe` command outputs the transcript text to stdout and progress/diagnostics to stderr. This enables natural Unix piping for flexible workflows:
+The standalone `build/transcribe` CLI is quiet by default: it outputs only transcript text to stdout. Add `--verbose` or `-v` to show progress, a completion summary, and low-level diagnostics on stderr. `make transcribe` is a local convenience wrapper.
 
 ### Copy transcript to clipboard
 ```bash
 # macOS
-make transcribe URL="https://www.youtube.com/watch?v=dQw4w9WgXcQ" | pbcopy
+build/transcribe "https://www.youtube.com/watch?v=dQw4w9WgXcQ" | pbcopy
 
 # Linux (xclip)
-make transcribe URL="https://www.youtube.com/watch?v=dQw4w9WgXcQ" | xclip -selection clipboard
+build/transcribe "https://www.youtube.com/watch?v=dQw4w9WgXcQ" | xclip -selection clipboard
 
 # Linux (xsel)
-make transcribe URL="https://www.youtube.com/watch?v=dQw4w9WgXcQ" | xsel --clipboard --input
+build/transcribe "https://www.youtube.com/watch?v=dQw4w9WgXcQ" | xsel --clipboard --input
 ```
 
 ### Save transcript to file
 ```bash
-make transcribe URL="https://www.youtube.com/watch?v=dQw4w9WgXcQ" > transcript.txt
-make transcribe URL="https://www.instagram.com/reel/ABC123/" >> all-transcripts.txt
+build/transcribe "https://www.youtube.com/watch?v=dQw4w9WgXcQ" > transcript.txt
+build/transcribe "https://www.instagram.com/reel/ABC123/" >> all-transcripts.txt
 ```
 
-### Suppress progress output
+### Show progress and diagnostics
 ```bash
-make transcribe URL="https://www.youtube.com/watch?v=dQw4w9WgXcQ" 2>/dev/null | pbcopy
+build/transcribe --verbose "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 ```
 
 ### Pipe to other tools
 ```bash
 # Word count
-make transcribe URL="..." 2>/dev/null | wc -w
+build/transcribe "https://..." | wc -w
 
 # Search for keywords
-make transcribe URL="..." | grep -i "keyword"
+build/transcribe "https://..." | grep -i "keyword"
 
 # Get first 20 lines
-make transcribe URL="..." | head -20
+build/transcribe "https://..." | head -20
 
 # Line count
-make transcribe URL="..." 2>/dev/null | wc -l
+build/transcribe "https://..." | wc -l
 ```
 
-**Note:** Progress and diagnostic information appears on stderr, allowing you to see transcription status while safely piping stdout to other commands.
+**Note:** Failures still print a concise message to stderr. Use `--verbose` when troubleshooting to include raw tool diagnostics while keeping stdout safe for pipelines.
 
 Environment configuration via `.env` file:
 ```bash

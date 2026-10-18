@@ -76,22 +76,27 @@ make benchmark     # Run performance benchmarks
 
 ### CLI Transcription
 
-For quick one-off transcriptions without starting the HTTP server, use the CLI tool:
+For quick one-off transcriptions without starting the HTTP server, build the standalone CLI once and invoke it directly:
 
 ```bash
+make build-transcribe
+
 # Transcribe a YouTube video
-make transcribe URL="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+build/transcribe "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 
 # Transcribe an Instagram reel
-make transcribe URL="https://www.instagram.com/reel/ABC123/"
+build/transcribe "https://www.instagram.com/reel/ABC123/"
 
 # Transcribe any supported platform (1000+ via yt-dlp)
-make transcribe URL="https://vimeo.com/123456789"
-make transcribe URL="https://www.tiktok.com/@user/video/123"
+build/transcribe "https://vimeo.com/123456789"
+build/transcribe "https://www.tiktok.com/@user/video/123"
 
 # Transcribe a local file
-make transcribe URL="/path/to/video.mp4"
-make transcribe URL="./recordings/meeting.wav"
+build/transcribe "/path/to/video.mp4"
+build/transcribe "./recordings/meeting.wav"
+
+# Make convenience wrapper for local use
+make transcribe URL="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 ```
 
 The CLI tool directly uses the `engine/` package (ADR-0001: Dual Consumption Model), bypassing the HTTP layer entirely. This is useful for:
@@ -102,40 +107,40 @@ The CLI tool directly uses the `engine/` package (ADR-0001: Dual Consumption Mod
 
 #### CLI Output and Piping
 
-The transcribe CLI outputs **only the transcript text to stdout** and **progress/diagnostics to stderr**. This enables composable Unix workflows:
+The transcribe CLI outputs **only the transcript text on successful default runs**. Concise failures go to stderr, and `--verbose` (or `-v`) enables progress and low-level diagnostics. This enables composable Unix workflows:
 
 ##### Copy transcript to clipboard (macOS)
 ```bash
-make transcribe URL="https://www.youtube.com/watch?v=dQw4w9WgXcQ" | pbcopy
+build/transcribe "https://www.youtube.com/watch?v=dQw4w9WgXcQ" | pbcopy
 ```
 
 ##### Save transcript to file
 ```bash
-make transcribe URL="https://www.youtube.com/watch?v=dQw4w9WgXcQ" > transcript.txt
-make transcribe URL="https://www.instagram.com/reel/ABC123/" >> all-transcripts.txt
+build/transcribe "https://www.youtube.com/watch?v=dQw4w9WgXcQ" > transcript.txt
+build/transcribe "https://www.instagram.com/reel/ABC123/" >> all-transcripts.txt
 ```
 
-##### Suppress progress output
+##### Show progress and diagnostics
 ```bash
-make transcribe URL="https://www.youtube.com/watch?v=dQw4w9WgXcQ" 2>/dev/null | pbcopy
+build/transcribe --verbose "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 ```
 
 ##### Get transcript statistics
 ```bash
 # Word count
-make transcribe URL="..." 2>/dev/null | wc -w
+build/transcribe "https://..." | wc -w
 
 # Line count
-make transcribe URL="..." 2>/dev/null | wc -l
+build/transcribe "https://..." | wc -l
 
 # Search for keywords
-make transcribe URL="..." | grep -i "important"
+build/transcribe "https://..." | grep -i "important"
 
 # Get first 10 lines
-make transcribe URL="..." | head -10
+build/transcribe "https://..." | head -10
 ```
 
-**Why separate output streams?** Progress and transcription status appears on stderr, so you see what's happening while piping the clean transcript to other tools. This follows Unix conventions for composable commands.
+**Why separate output streams?** Transcript data stays on stdout while optional diagnostics and failures use stderr. This follows Unix conventions for composable commands.
 
 ### Development Server Options
 

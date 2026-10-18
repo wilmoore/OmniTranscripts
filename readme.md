@@ -133,17 +133,25 @@ encore deploy --env production
 
 ### Command-Line Interface (CLI)
 
-For quick one-off transcriptions without starting a server:
+Build the standalone CLI once, then invoke it directly with standard command-line flags:
 
 ```bash
+make build-transcribe
+
 # Copy transcript to clipboard (macOS)
-make transcribe URL="https://www.youtube.com/watch?v=..." | pbcopy
+build/transcribe "https://www.youtube.com/watch?v=..." | pbcopy
 
 # Save transcript to file
-make transcribe URL="https://www.youtube.com/watch?v=..." > transcript.txt
+build/transcribe "https://www.youtube.com/watch?v=..." > transcript.txt
 
 # Get transcript statistics
-make transcribe URL="..." 2>/dev/null | wc -w  # Word count
+build/transcribe "https://..." | wc -w
+
+# Show progress and low-level diagnostics
+build/transcribe --verbose "https://..."
+
+# Make convenience wrapper for local use
+make transcribe URL="https://..."
 ```
 
 The CLI is perfect for:

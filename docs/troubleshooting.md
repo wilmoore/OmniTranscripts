@@ -740,25 +740,25 @@ make transcribe URL="..." | python3 -c "import sys; print(sys.stdin.read())"
 **Solution:** Verify the command is working correctly:
 ```bash
 # Test without pbcopy - see transcript on screen
-make transcribe URL="..." 2>/dev/null
+make transcribe URL="..."
 
 # Check that pbcopy command works
 echo "test" | pbcopy && pbpaste  # Should output "test"
 
 # Check that pipe is working
-make transcribe URL="..." 2>/dev/null | wc -w  # Should show word count
+make transcribe URL="..." | wc -w  # Should show word count
 ```
 
 ### Too Much Output When Copying to Clipboard
 
-**Problem:** Clipboard contains progress messages along with transcript.
+**Problem:** You need to inspect progress or low-level transcription diagnostics.
 
-**Solution:** Redirect stderr to /dev/null:
+**Solution:** Enable verbose mode. Diagnostics remain on stderr, so stdout is still safe to pipe:
 ```bash
-make transcribe URL="..." 2>/dev/null | pbcopy
+make transcribe URL="..." VERBOSE=1 | pbcopy
 ```
 
-This suppresses progress/diagnostic output on stderr and only copies the transcript to clipboard.
+Without `VERBOSE=1`, successful runs print only transcript text.
 
 ## Getting Help
 
