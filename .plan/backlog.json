@@ -1,6 +1,32 @@
 {
-  "lastSequence": 15,
+  "lastSequence": 17,
   "items": [
+    {
+      "id": 16,
+      "title": "Add quiet-by-default transcribe output",
+      "description": "Make the transcribe CLI print only transcript text on successful default runs so terminal output and clipboard pipelines stay clean. Add an opt-in verbose mode that restores progress, summaries, ffmpeg command details, native Whisper diagnostics, and detailed downloader errors while retaining concise errors by default.",
+      "category": "feature",
+      "severity": "medium",
+      "fingerprint": "feature|16|quiet-by-default-transcribe-output",
+      "source": "/pro:feature",
+      "sourceBranch": "feat/clean-transcribe-output",
+      "createdAt": "2026-10-07T14:54:50Z",
+      "status": "completed",
+      "completedAt": "2026-10-07T15:08:00Z",
+      "completionEvidence": "Added quiet-by-default CLI and engine output, GNU-style --verbose/-v diagnostics, a documented make build-transcribe target, executable-relative model discovery for direct CLI use, a retained VERBOSE=1 Make convenience wrapper, synchronized native Whisper and ffmpeg logging controls, concise default failures, updated usage documentation and ADR 0006, regression tests, all non-handler Go package tests and full vet passes, CGO build verification, and cached native smoke tests proving zero stderr bytes in quiet mode."
+    },
+    {
+      "id": 17,
+      "title": "Diagnose handlers test startup hang",
+      "description": "The handlers package test binary hangs before emitting its first verbose test event and does not honor the requested 60-second Go test timeout. Diagnose package initialization or external-resource startup so `go test ./...` completes reliably. All other repository packages pass.",
+      "category": "tests",
+      "severity": "medium",
+      "fingerprint": "tests|17|handlers-test-startup-hang",
+      "source": "/pro:pr",
+      "sourceBranch": "feat/clean-transcribe-output",
+      "createdAt": "2026-10-18T02:58:08Z",
+      "status": "pending"
+    },
     {
       "id": 11,
       "title": "Fix YouTube Shorts 403 Forbidden download error",

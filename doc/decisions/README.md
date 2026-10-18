@@ -22,3 +22,4 @@ We use the [Michael Nygard format](https://cognitect.com/blog/2011/11/15/documen
 - [002. Examples Directory for Usage Patterns](0002-examples-directory-for-usage-patterns.md)
 - [004. Async-First MCP Server Integration](0004-async-first-mcp-server-integration.md)
 - [005. Separate CLI Data and Diagnostic Streams](0005-separate-cli-data-and-diagnostic-streams.md)
+- [006. Make CLI Diagnostics Opt-in](0006-quiet-cli-output-by-default.md)

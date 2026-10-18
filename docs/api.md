@@ -423,70 +423,74 @@ For detailed setup instructions, see [ChatGPT Integration Guide](chatgpt-integra
 
 ## Command-Line Interface (CLI)
 
-The `make transcribe` command provides a convenient way to transcribe media without starting the HTTP server.
+The standalone `build/transcribe` CLI transcribes media without starting the HTTP server. Build it once with `make build-transcribe`. The `make transcribe` target remains a local convenience wrapper that rebuilds when invoked.
 
 ### Basic Usage
 
 ```bash
-# Transcribe a URL
-make transcribe URL="https://www.youtube.com/watch?v=VIDEO_ID"
+# Build once, then transcribe a URL
+make build-transcribe
+build/transcribe "https://www.youtube.com/watch?v=VIDEO_ID"
 
 # Transcribe a local file
-make transcribe URL="/path/to/video.mp4"
+build/transcribe "/path/to/video.mp4"
+
+# Local Make convenience wrapper
+make transcribe URL="https://www.youtube.com/watch?v=VIDEO_ID"
 ```
 
 ### Output Handling
 
 The CLI outputs:
 - **stdout**: Clean transcript text (suitable for piping to other tools)
-- **stderr**: Progress messages and diagnostics
+- **stderr**: Concise failures; progress and diagnostics when `--verbose` is passed
 
-This separation enables composable Unix workflows.
+Successful runs are quiet by default. This separation enables composable Unix workflows.
 
 ### Copy to Clipboard
 
 ```bash
 # macOS
-make transcribe URL="https://www.youtube.com/watch?v=VIDEO_ID" | pbcopy
+build/transcribe "https://www.youtube.com/watch?v=VIDEO_ID" | pbcopy
 
 # Linux (xclip)
-make transcribe URL="https://www.youtube.com/watch?v=VIDEO_ID" | xclip -selection clipboard
+build/transcribe "https://www.youtube.com/watch?v=VIDEO_ID" | xclip -selection clipboard
 
 # Linux (xsel)
-make transcribe URL="https://www.youtube.com/watch?v=VIDEO_ID" | xsel --clipboard --input
+build/transcribe "https://www.youtube.com/watch?v=VIDEO_ID" | xsel --clipboard --input
 ```
 
 ### Save to File
 
 ```bash
 # Save transcript
-make transcribe URL="https://www.youtube.com/watch?v=VIDEO_ID" > transcript.txt
+build/transcribe "https://www.youtube.com/watch?v=VIDEO_ID" > transcript.txt
 
 # Append to file
-make transcribe URL="..." >> all-transcripts.txt
+build/transcribe "https://..." >> all-transcripts.txt
 ```
 
-### Suppress Progress Output
+### Show Progress and Diagnostics
 
 ```bash
-# Hide progress messages while piping
-make transcribe URL="..." 2>/dev/null | pbcopy
+# Opt into progress, summary, and low-level tool diagnostics
+build/transcribe --verbose "https://..."
 ```
 
 ### Text Processing
 
 ```bash
 # Word count
-make transcribe URL="..." 2>/dev/null | wc -w
+build/transcribe "https://..." | wc -w
 
 # Line count
-make transcribe URL="..." 2>/dev/null | wc -l
+build/transcribe "https://..." | wc -l
 
 # Search for keywords
-make transcribe URL="..." | grep -i "keyword"
+build/transcribe "https://..." | grep -i "keyword"
 
 # Get first N lines
-make transcribe URL="..." | head -20
+build/transcribe "https://..." | head -20
 ```
 
 ### Exit Codes
@@ -494,9 +498,9 @@ make transcribe URL="..." | head -20
 - `0`: Success
 - `1`: Error (invalid URL, file not found, transcription failed, etc.)
 
-Check stderr for error details:
+Check stderr for concise errors, or enable verbose diagnostics:
 ```bash
-make transcribe URL="..." 2>&1 | head  # See error messages
+build/transcribe --verbose "https://..."
 ```
 
 ---

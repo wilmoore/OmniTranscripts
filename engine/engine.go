@@ -17,7 +17,14 @@ var (
 	ytdlpInstallOnce sync.Once
 	ytdlpInstall     *ytdlp.ResolvedInstall
 	ytdlpInstallErr  error
+	ffmpegLogMu      sync.Mutex
 )
+
+func diagnosticf(opts Options, format string, args ...any) {
+	if opts.Verbose {
+		fmt.Fprintf(os.Stderr, format, args...)
+	}
+}
 
 // ensureYtdlp ensures the bundled yt-dlp binary is installed and cached.
 // This is called lazily on first use and cached for subsequent calls.
@@ -76,7 +83,7 @@ func Transcribe(ctx context.Context, url string, jobID string, opts Options) (*R
 	cacheHit := false
 	if opts.CacheDownloads {
 		if _, err := os.Stat(normalizedAudio); err == nil {
-			fmt.Printf("Using cached audio: %s\n", normalizedAudio)
+			diagnosticf(opts, "Using cached audio: %s\n", normalizedAudio)
 			cacheHit = true
 		}
 	}
@@ -86,7 +93,7 @@ func Transcribe(ctx context.Context, url string, jobID string, opts Options) (*R
 			return nil, NewError(StageDownload, "failed to download audio", err)
 		}
 
-		if err := normalizeAudio(ctx, audioFile, normalizedAudio); err != nil {
+		if err := normalizeAudio(ctx, audioFile, normalizedAudio, opts.Verbose); err != nil {
 			return nil, NewError(StageNormalize, "failed to normalize audio", err)
 		}
 	}
@@ -167,7 +174,7 @@ func downloaderErrorFromResult(rawURL, version string, result *ytdlp.Result, err
 	return newDownloaderError(rawURL, version, exitCode, details, err)
 }
 
-func normalizeAudio(ctx context.Context, inputPath, outputPath string) error {
+func normalizeAudio(ctx context.Context, inputPath, outputPath string, verbose bool) error {
 	stream := ffmpeg_go.Input(inputPath).
 		Audio().
 		Output(outputPath, ffmpeg_go.KwArgs{
@@ -179,6 +186,16 @@ func normalizeAudio(ctx context.Context, inputPath, outputPath string) error {
 
 	// Set the context on the stream to enable cancellation
 	stream.Context = ctx
+
+	// ffmpeg-go controls command logging through a package global. Serialize the
+	// temporary setting so concurrent transcriptions cannot leak diagnostics.
+	ffmpegLogMu.Lock()
+	previousLogSetting := ffmpeg_go.LogCompiledCommand
+	ffmpeg_go.LogCompiledCommand = verbose
+	defer func() {
+		ffmpeg_go.LogCompiledCommand = previousLogSetting
+		ffmpegLogMu.Unlock()
+	}()
 
 	if err := stream.Run(); err != nil {
 		return fmt.Errorf("ffmpeg normalization failed: %w", err)
@@ -192,43 +209,43 @@ func transcribeAudio(audioPath, outputPath string, opts Options) (string, []Segm
 
 	// 1. Native whisper.cpp
 	if opts.WhisperModelPath != "" {
-		fmt.Printf("Attempting transcription with native Whisper (model: %s)...\n", opts.WhisperModelPath)
-		transcript, segments, err := transcribeWithNativeWhisper(audioPath, outputPath, opts.WhisperModelPath)
+		diagnosticf(opts, "Attempting transcription with native Whisper (model: %s)...\n", opts.WhisperModelPath)
+		transcript, segments, err := transcribeWithNativeWhisper(audioPath, outputPath, opts.WhisperModelPath, opts.Verbose)
 		if err == nil {
-			fmt.Println("Native Whisper transcription completed successfully")
+			diagnosticf(opts, "Native Whisper transcription completed successfully\n")
 			return transcript, segments, nil
 		}
-		fmt.Printf("Native Whisper transcription failed: %v, falling back...\n", err)
+		diagnosticf(opts, "Native Whisper transcription failed: %v, falling back...\n", err)
 	}
 
 	// 2. AssemblyAI
 	if opts.AssemblyAIKey != "" {
-		fmt.Println("Attempting transcription with AssemblyAI...")
+		diagnosticf(opts, "Attempting transcription with AssemblyAI...\n")
 		transcript, segments, err := transcribeWithAssemblyAI(audioPath, outputPath, opts.AssemblyAIKey)
 		if err == nil {
-			fmt.Println("AssemblyAI transcription completed successfully")
+			diagnosticf(opts, "AssemblyAI transcription completed successfully\n")
 			return transcript, segments, nil
 		}
-		fmt.Printf("AssemblyAI transcription failed: %v, falling back...\n", err)
+		diagnosticf(opts, "AssemblyAI transcription failed: %v, falling back...\n", err)
 	}
 
 	// 3. Whisper server
 	if opts.WhisperServerURL != "" {
-		fmt.Println("Attempting transcription with local Whisper server...")
+		diagnosticf(opts, "Attempting transcription with local Whisper server...\n")
 		transcript, segments, err := transcribeWithWhisperServer(audioPath, outputPath, opts.WhisperServerURL)
 		if err == nil {
-			fmt.Println("Whisper server transcription completed successfully")
+			diagnosticf(opts, "Whisper server transcription completed successfully\n")
 			return transcript, segments, nil
 		}
-		fmt.Printf("Whisper server transcription failed: %v, falling back...\n", err)
+		diagnosticf(opts, "Whisper server transcription failed: %v, falling back...\n", err)
 	}
 
 	// 4. Demo fallback
-	fmt.Println("Using demo transcription (no transcription services configured)")
+	diagnosticf(opts, "Using demo transcription (no transcription services configured)\n")
 	return transcribeDemo(audioPath, outputPath)
 }
 
-func transcribeWithNativeWhisper(audioPath, outputPath, modelPath string) (string, []Segment, error) {
+func transcribeWithNativeWhisper(audioPath, outputPath, modelPath string, verbose bool) (string, []Segment, error) {
 	// Check if whisper.cpp is available (CGO build)
 	if !lib.IsWhisperAvailable() {
 		return "", nil, fmt.Errorf("whisper.cpp requires CGO; build with CGO_ENABLED=1")
@@ -241,7 +258,7 @@ func transcribeWithNativeWhisper(audioPath, outputPath, modelPath string) (strin
 	}
 
 	// Initialize whisper context with model
-	whisperCtx, err := lib.InitWhisper(modelPath)
+	whisperCtx, err := lib.InitWhisper(modelPath, verbose)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to initialize whisper: %w", err)
 	}

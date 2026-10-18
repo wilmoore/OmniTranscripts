@@ -1,5 +1,5 @@
 {
-  "lastSequence": 5,
+  "lastSequence": 6,
   "entries": [
     {
       "branch": "feature/rename-omnitranscripts",
@@ -24,6 +24,10 @@
     {
       "branch": "chore/fix-clipboard-transcribe-output",
       "adrs": ["0005-separate-cli-data-and-diagnostic-streams.md"]
+    },
+    {
+      "branch": "feat/clean-transcribe-output",
+      "adrs": ["0006-quiet-cli-output-by-default.md"]
     }
   ]
 }

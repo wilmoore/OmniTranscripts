@@ -8,7 +8,7 @@ import "fmt"
 type WhisperContext struct{}
 
 // InitWhisper returns an error on non-CGO builds
-func InitWhisper(modelPath string) (*WhisperContext, error) {
+func InitWhisper(modelPath string, verbose ...bool) (*WhisperContext, error) {
 	return nil, fmt.Errorf("whisper.cpp requires CGO; build with CGO_ENABLED=1")
 }
 
