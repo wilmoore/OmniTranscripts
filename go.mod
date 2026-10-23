@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	encore.dev v1.52.1
-	github.com/gofiber/fiber/v2 v2.52.0
+	github.com/gofiber/fiber/v2 v2.52.15
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/lrstanley/go-ytdlp v1.3.7-0.20260821131839-c2e26ba06581
