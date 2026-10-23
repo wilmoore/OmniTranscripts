@@ -1,13 +1,13 @@
 module omnitranscripts
 
-go 1.25.0
+go 1.27
 
 require (
 	encore.dev v1.52.1
 	github.com/gofiber/fiber/v2 v2.52.0
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
-	github.com/lrstanley/go-ytdlp v1.3.7-0.20260821131839-c2e26ba06581
+	github.com/lrstanley/go-ytdlp v1.5.4
 	github.com/mark3labs/mcp-go v0.43.2
 	github.com/stretchr/testify v1.12.0
 	github.com/u2takey/ffmpeg-go v0.5.0
@@ -41,9 +41,9 @@ require (
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
-	golang.org/x/crypto v0.55.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/crypto v0.57.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
