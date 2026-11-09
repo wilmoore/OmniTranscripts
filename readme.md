@@ -150,11 +150,17 @@ build/transcribe "https://www.youtube.com/watch?v=..." > transcript.txt
 # Get transcript statistics
 build/transcribe "https://..." | wc -w
 
+# Show a live pipeline meter
+build/transcribe --progress "https://..."
+
 # Show progress and low-level diagnostics
-build/transcribe --verbose "https://..."
+build/transcribe --progress --verbose "https://..."
 
 # Make convenience wrapper for local use
 make transcribe URL="https://..."
+
+# Make convenience wrapper with a live meter and clipboard
+make transcribe URL="https://..." PROGRESS=1 | pbcopy
 ```
 
 The CLI is perfect for:

@@ -61,7 +61,7 @@ go test -v -run TestPostTranscribe_ValidationErrors ./handlers
 
 ## CLI Output and Piping
 
-The standalone `build/transcribe` CLI is quiet by default: it outputs only transcript text to stdout. Add `--verbose` or `-v` to show progress, a completion summary, and low-level diagnostics on stderr. `make transcribe` is a local convenience wrapper.
+The standalone `build/transcribe` CLI is quiet by default: it outputs only transcript text to stdout. Add `--progress` or `-p` for a compact stage meter, or `--verbose` / `-v` for low-level diagnostics on stderr. `make transcribe` is a local convenience wrapper; use `PROGRESS=1` to pass the meter through it.
 
 ### Copy transcript to clipboard
 ```bash
@@ -83,7 +83,12 @@ build/transcribe "https://www.instagram.com/reel/ABC123/" >> all-transcripts.txt
 
 ### Show progress and diagnostics
 ```bash
-build/transcribe --verbose "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+build/transcribe --progress --verbose "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+```
+
+### Copy with a live meter
+```bash
+build/transcribe --progress "https://www.youtube.com/watch?v=dQw4w9WgXcQ" | pbcopy
 ```
 
 ### Pipe to other tools

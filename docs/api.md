@@ -447,7 +447,7 @@ make transcribe URL="https://www.youtube.com/watch?v=VIDEO_ID"
 
 The CLI outputs:
 - **stdout**: Clean transcript text (suitable for piping to other tools)
-- **stderr**: Concise failures; progress and diagnostics when `--verbose` is passed
+- **stderr**: Concise failures; a stage meter with `--progress`; detailed diagnostics with `--verbose`
 
 Successful runs are quiet by default. This separation enables composable Unix workflows.
 
@@ -477,8 +477,11 @@ build/transcribe "https://..." >> all-transcripts.txt
 ### Show Progress and Diagnostics
 
 ```bash
-# Opt into progress, summary, and low-level tool diagnostics
-build/transcribe --verbose "https://..."
+# Opt into a compact stage meter
+build/transcribe --progress "https://..."
+
+# Add low-level tool diagnostics
+build/transcribe --progress --verbose "https://..."
 ```
 
 ### Text Processing
@@ -504,7 +507,7 @@ build/transcribe "https://..." | head -20
 
 Check stderr for concise errors, or enable verbose diagnostics:
 ```bash
-build/transcribe --verbose "https://..."
+build/transcribe --progress --verbose "https://..."
 ```
 
 ---

@@ -14,7 +14,7 @@ ADR 0005 separated transcript data on standard output from diagnostics on standa
 
 Successful transcribe commands are quiet by default: standard output contains only transcript text and standard error is empty. Concise failure messages remain on standard error.
 
-Users can pass `--verbose`, or `VERBOSE=1` through the Make target, to enable progress, completion statistics, raw nested failure details, ffmpeg command logging, and native Whisper diagnostics on standard error. Standard output remains transcript-only in every mode.
+Users can pass `--progress` / `-p` for a compact stage meter, or `--verbose` / `-v` (and `VERBOSE=1` through Make) for completion statistics, raw nested failure details, ffmpeg command logging, and native Whisper diagnostics on standard error. Standard output remains transcript-only in every mode.
 
 Clipboard support remains a shell composition such as `make transcribe URL="..." | pbcopy`; the project does not add platform-specific clipboard handling.
 
