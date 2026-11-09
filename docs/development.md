@@ -110,7 +110,7 @@ The CLI tool directly uses the `engine/` package (ADR-0001: Dual Consumption Mod
 
 #### CLI Output and Piping
 
-The transcribe CLI outputs **only the transcript text on successful default runs**. Concise failures go to stderr, and `--verbose` (or `-v`) enables progress and low-level diagnostics. This enables composable Unix workflows:
+The transcribe CLI outputs **only the transcript text on successful default runs**. Concise failures go to stderr, `--progress` (or `-p`) enables a compact stage meter, and `--verbose` (or `-v`) enables low-level diagnostics. Both progress modes use stderr, so this remains composable:
 
 ##### Copy transcript to clipboard (macOS)
 ```bash
@@ -123,9 +123,19 @@ build/transcribe "https://www.youtube.com/watch?v=dQw4w9WgXcQ" > transcript.txt
 build/transcribe "https://www.instagram.com/reel/ABC123/" >> all-transcripts.txt
 ```
 
+##### Show a live pipeline meter
+```bash
+build/transcribe --progress "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+```
+
 ##### Show progress and diagnostics
 ```bash
-build/transcribe --verbose "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+build/transcribe --progress --verbose "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+```
+
+##### Show progress while copying to clipboard
+```bash
+build/transcribe --progress "https://www.youtube.com/watch?v=dQw4w9WgXcQ" | pbcopy
 ```
 
 ##### Get transcript statistics

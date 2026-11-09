@@ -1,6 +1,20 @@
 {
-  "lastSequence": 18,
+  "lastSequence": 19,
   "items": [
+    {
+      "id": 19,
+      "title": "Add transcribe pipeline progress meter",
+      "description": "Add an opt-in --progress/-p CLI mode that renders a compact live stage meter on stderr for download, normalization, and transcription while preserving transcript-only stdout. Expose stage callbacks through engine options, document clipboard composition, and retain --verbose for low-level diagnostics.",
+      "category": "feature",
+      "severity": "medium",
+      "fingerprint": "feature|19|transcribe-progress-meter",
+      "source": "/pro:feature",
+      "sourceBranch": "feat/transcribe-progress-meter",
+      "createdAt": "2026-11-09T05:12:44Z",
+      "status": "completed",
+      "completedAt": "2026-11-09T05:17:48Z",
+      "completionEvidence": "Added optional engine stage callbacks, a CLI --progress/-p spinner meter on stderr, Make PROGRESS=1 forwarding, clipboard-safe documentation, regression tests, and cached native verification with transcript-only stdout."
+    },
     {
       "id": 18,
       "title": "Add documented Loom video support",

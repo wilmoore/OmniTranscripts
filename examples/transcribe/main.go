@@ -6,7 +6,7 @@
 //
 // Usage:
 //
-//	build/transcribe [--verbose] <url_or_file_path>
+//	build/transcribe [--progress] [--verbose] <url_or_file_path>
 //	make transcribe URL="https://youtube.com/watch?v=..."
 package main
 
@@ -33,8 +33,10 @@ func main() {
 func run(args []string, stdout, stderr io.Writer, transcribe transcribeFunc) int {
 	flags := flag.NewFlagSet("transcribe", flag.ContinueOnError)
 	flags.SetOutput(stderr)
-	verbose := flags.Bool("verbose", false, "show progress and diagnostic output")
-	flags.BoolVar(verbose, "v", false, "show progress and diagnostic output")
+	verbose := flags.Bool("verbose", false, "show diagnostic output")
+	flags.BoolVar(verbose, "v", false, "show diagnostic output")
+	progress := flags.Bool("progress", false, "show a live pipeline progress meter")
+	flags.BoolVar(progress, "p", false, "show a live pipeline progress meter")
 	flags.Usage = func() { printUsage(stderr) }
 	if err := flags.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -83,10 +85,19 @@ func run(args []string, stdout, stderr io.Writer, transcribe transcribeFunc) int
 	opts := engine.DefaultOptions()
 	opts.CacheDownloads = true // Cache downloads for CLI usage
 	opts.Verbose = *verbose
+	var meter *progressMeter
+	if *progress {
+		meter = newProgressMeter(stderr)
+		meter.Start()
+		opts.Progress = meter.Update
+	}
 	if opts.WhisperModelPath == "" {
 		opts.WhisperModelPath = defaultModelPath()
 	}
 	result, err := transcribe(ctx, input, "cli-transcribe", opts)
+	if meter != nil {
+		meter.Stop(err == nil)
+	}
 	if err != nil {
 		writeTranscriptionError(stderr, err, *verbose)
 		return 1
@@ -147,9 +158,10 @@ func writeTranscriptionError(stderr io.Writer, err error, verbose bool) {
 }
 
 func printUsage(stderr io.Writer) {
-	fmt.Fprintln(stderr, "Usage: build/transcribe [--verbose] <url_or_file_path>")
+	fmt.Fprintln(stderr, "Usage: build/transcribe [--progress] [--verbose] <url_or_file_path>")
 	fmt.Fprintln(stderr, "\nOptions:")
-	fmt.Fprintln(stderr, "  -v, --verbose  Show progress and diagnostic output")
+	fmt.Fprintln(stderr, "  -p, --progress Show a live pipeline progress meter")
+	fmt.Fprintln(stderr, "  -v, --verbose  Show diagnostic output")
 	fmt.Fprintln(stderr, "\nExamples:")
 	fmt.Fprintln(stderr, "  # Transcribe a YouTube video")
 	fmt.Fprintln(stderr, "  build/transcribe https://www.youtube.com/watch?v=dQw4w9WgXcQ")
