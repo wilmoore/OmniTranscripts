@@ -82,10 +82,10 @@ endif
 .PHONY: build-transcribe
 build-transcribe: ## Build the standalone transcribe CLI
 	@mkdir -p $(BUILD_DIR)
-	@CGO_ENABLED=1 go build -o $(BUILD_DIR)/transcribe examples/transcribe/main.go
+	@CGO_ENABLED=1 go build -o $(BUILD_DIR)/transcribe ./examples/transcribe
 
 .PHONY: transcribe
-transcribe: build-transcribe ## Convenience wrapper for the transcribe CLI ([VERBOSE=1])
+transcribe: build-transcribe ## Convenience wrapper for the transcribe CLI ([PROGRESS=1] [VERBOSE=1])
 ifndef URL
 	@echo "$(RED)Error: URL is required$(NC)" >&2
 	@echo "Usage: make transcribe URL=\"https://youtube.com/watch?v=...\"" >&2
@@ -95,10 +95,11 @@ ifndef URL
 	@echo "  make transcribe URL=\"https://www.instagram.com/reel/ABC123/\"" >&2
 	@echo "  make transcribe URL=\"/path/to/video.mp4\"" >&2
 	@echo "  make transcribe URL=\"https://...\" VERBOSE=1" >&2
+	@echo "  make transcribe URL=\"https://...\" PROGRESS=1 | pbcopy" >&2
 	@echo "  make transcribe URL=\"https://...\" | pbcopy" >&2
 	@exit 1
 endif
-	@$(BUILD_DIR)/transcribe $(if $(filter 1 true yes,$(VERBOSE)),--verbose) "$(URL)"
+	@$(BUILD_DIR)/transcribe $(if $(filter 1 true yes,$(PROGRESS)),--progress) $(if $(filter 1 true yes,$(VERBOSE)),--verbose) "$(URL)"
 
 ##@ Building
 .PHONY: build

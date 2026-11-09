@@ -6,6 +6,10 @@ import (
 	"os"
 )
 
+// ProgressFunc receives pipeline stage transitions during transcription.
+// It is optional; a nil callback preserves silent library behavior.
+type ProgressFunc func(Stage)
+
 // Options configures the transcription engine behavior.
 type Options struct {
 	// WorkDir is the directory for temporary files during processing.
@@ -29,9 +33,12 @@ type Options struct {
 	// Useful for CLI usage to avoid re-downloading the same media.
 	CacheDownloads bool
 
-	// Verbose enables progress and low-level backend diagnostics on stderr.
+	// Verbose enables low-level backend diagnostics on stderr.
 	// It is disabled by default so callers receive no unsolicited output.
 	Verbose bool
+
+	// Progress receives stage transitions when configured by a caller.
+	Progress ProgressFunc
 }
 
 // DefaultOptions returns Options populated from environment variables.

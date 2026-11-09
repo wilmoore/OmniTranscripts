@@ -26,6 +26,12 @@ func diagnosticf(opts Options, format string, args ...any) {
 	}
 }
 
+func reportProgress(opts Options, stage Stage) {
+	if opts.Progress != nil {
+		opts.Progress(stage)
+	}
+}
+
 // ensureYtdlp ensures the bundled yt-dlp binary is installed and cached.
 // This is called lazily on first use and cached for subsequent calls.
 // Using the bundled version ensures consistent behavior and access to
@@ -89,15 +95,18 @@ func Transcribe(ctx context.Context, url string, jobID string, opts Options) (*R
 	}
 
 	if !cacheHit {
+		reportProgress(opts, StageDownload)
 		if err := downloadAudio(ctx, url, audioFile); err != nil {
 			return nil, NewError(StageDownload, "failed to download audio", err)
 		}
 
+		reportProgress(opts, StageNormalize)
 		if err := normalizeAudio(ctx, audioFile, normalizedAudio, opts.Verbose); err != nil {
 			return nil, NewError(StageNormalize, "failed to normalize audio", err)
 		}
 	}
 
+	reportProgress(opts, StageTranscribe)
 	transcript, segments, err := transcribeAudio(normalizedAudio, transcriptFile, opts)
 	if err != nil {
 		return nil, NewError(StageTranscribe, "failed to transcribe audio", err)
